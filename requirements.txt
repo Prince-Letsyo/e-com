@@ -1,0 +1,11 @@
+Django
+dj-rest-auth
+django-cors-headers
+django-extensions
+django-countries
+djangorestframework
+djangorestframework-simplejwt
+drf-yasg
+Pillow
+python-dotenv
+
