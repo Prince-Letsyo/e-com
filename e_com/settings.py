@@ -124,6 +124,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 AUTH_USER_MODEL = 'user.User'
 REST_FRAMEWORK = {
@@ -133,8 +134,11 @@ REST_FRAMEWORK = {
 }
 
 REST_AUTH = {
+    'LOGIN_SERIALIZER': 'user.serializers.CustomLoginSerializer',
+    'PASSWORD_RESET_SERIALIZER': 'user.serializers.CustomPasswordResetSerializer',
     'TOKEN_MODEL':None,
     
+    # 'PASSWORD_RESET_USE_SITES_DOMAIN': True,
     'USE_JWT': True,
     'JWT_AUTH_HTTPONLY':False,
     'JWT_AUTH_RETURN_EXPIRATION': True,
@@ -145,9 +149,11 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
+
 SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_ADAPTER="user.adapter.CustomDefaultAccountAdapter"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/

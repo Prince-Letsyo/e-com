@@ -20,6 +20,8 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
+from user.views import PasswordTokenCheckAPI
+
 schema_view = get_schema_view(
     openapi.Info(
         title="E-com",   
@@ -34,9 +36,12 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', schema_view.with_ui("swagger",
+    path('', schema_view.with_ui("swagger",
          cache_timeout=0), name="schema-swagger-ui"),
+    path('admin/', admin.site.urls),
+    path('auth/', include('user.urls')),
+             path('password-reset/<uidb64>/<token>/',
+         PasswordTokenCheckAPI.as_view(), name='password_reset_confirm'),
     path('dj-rest-auth/', include('dj_rest_auth.urls')),
     path('dj-rest-auth/registration/', include('dj_rest_auth.registration.urls'))
 ]
