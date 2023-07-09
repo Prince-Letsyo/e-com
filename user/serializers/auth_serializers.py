@@ -1,14 +1,18 @@
 from django.conf import settings
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.sites.models import Site
 from django.utils.encoding import (force_str)
 from django.utils.http import urlsafe_base64_decode 
 from dj_rest_auth.serializers import ( LoginSerializer,PasswordResetSerializer)
+from dj_rest_auth.registration.serializers import ( RegisterSerializer, ResendEmailVerificationSerializer)
 from rest_framework import serializers
+from helper.choices import Sex
+
 from user.forms import AllAuthPasswordResetForm
 from user.models import User
+from user.utils import make_site_choice
+
 
 
 class CustomLoginSerializer(LoginSerializer):
@@ -17,7 +21,7 @@ class CustomLoginSerializer(LoginSerializer):
     pass
 
 class CustomPasswordResetSerializer(PasswordResetSerializer):
-    site = serializers.ChoiceField(required=False, choices=[*[( obj.domain,obj.name) for obj in Site.objects.all()]])
+    site = serializers.ChoiceField(required=False, choices=make_site_choice())
 
     @property
     def password_reset_form_class(self):
@@ -84,3 +88,28 @@ class SiteSerialiser(serializers.ModelSerializer):
             "domain",
             "name",
         ]
+        
+
+class CustomRegisterSerializer(RegisterSerializer):
+    first_name=serializers.CharField(max_length=150, required=True)
+    last_name=serializers.CharField(max_length=150, required=True)
+    middle_name=serializers.CharField(max_length=150, required=False)
+    gender=serializers.ChoiceField(choices=Sex.choices, default=Sex.MALE)
+    site = serializers.ChoiceField(required=False, choices=make_site_choice())
+    
+    def custom_signup(self, request, user):
+        user.middle_name = self.validated_data.get('middle_name', '')
+        user.gender = self.validated_data.get('gender', '')
+        user.save()
+        pass
+    
+    def get_cleaned_data(self):
+        data = super().get_cleaned_data()
+        data['first_name']=self.validated_data.get('first_name', '')
+        data['last_name']= self.validated_data.get('last_name', '')
+        return data
+            
+
+class CustomResendEmailVerificationSerializer(ResendEmailVerificationSerializer):
+    site = serializers.ChoiceField(required=False, choices=make_site_choice())
+    

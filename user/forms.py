@@ -8,8 +8,8 @@ from django.utils.encoding import (smart_bytes)
 from django.utils.http import urlsafe_base64_encode
 from dj_rest_auth.app_settings import api_settings
 
-from .shortcuts import get_current_site
-
+from user.shortcuts import get_current_site
+from user.utils import make_site_choice
 
 if 'allauth' in settings.INSTALLED_APPS:
     from allauth.account import app_settings as allauth_account_settings
@@ -26,8 +26,9 @@ if 'allauth' in settings.INSTALLED_APPS:
 
 def default_url_generator(request, uid, temp_key):
     path = reverse(
-        'password_reset_confirm',
+        'user:password_reset_confirm',
         args=[uid, temp_key],
+        current_app="user"
     )
 
     if api_settings.PASSWORD_RESET_USE_SITES_DOMAIN :
@@ -45,7 +46,7 @@ class AllAuthPasswordResetForm(DefaultPasswordResetForm):
     def __init__(self, *args, **kwargs):
         super(AllAuthPasswordResetForm,self).__init__(*args, **kwargs)
         self.fields['site']=forms.ChoiceField(required=False,
-            choices=[*[( obj.domain,obj.name) for obj in Site.objects.all()]])
+            choices=make_site_choice())
 
     def clean_email(self):
         """
@@ -87,7 +88,8 @@ class AllAuthPasswordResetForm(DefaultPasswordResetForm):
                 != allauth_account_settings.AuthenticationMethod.EMAIL
             ):
                 context['username'] = user_username(user)
+            get_adapter(request).domain=current_site.domain
             get_adapter(request).send_mail(
-                'account/email/password_reset_key', email, context,domain=current_site.domain
+                'account/email/password_reset_key', email, context
             )
         return {"email":self.cleaned_data['email'], "token": temp_key, "uid": uid}

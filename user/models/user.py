@@ -48,7 +48,6 @@ class UserManager(BaseUserManager):
             password=password
             )
         user.is_superuser = True
-        user.is_verified = True
         user.is_staff = True
         user.save()
         return user
@@ -62,7 +61,6 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStamps):
     gender = models.CharField(max_length=2,
                               choices=Sex.choices, default=Sex.MALE)
     email = models.EmailField(max_length=50, unique=True)
-    is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 

@@ -1,11 +1,17 @@
+from typing import Any
+from allauth.account import app_settings as allauth_account_settings
+from allauth.account.models import EmailAddress
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
 from django.utils.encoding import (smart_str)
 from django.utils.http import urlsafe_base64_decode
-from dj_rest_auth.views import (LoginView, LogoutView, PasswordResetView, 
-                                PasswordChangeView,PasswordResetConfirmView,UserDetailsView
-                                )
+from dj_rest_auth.views import (LoginView, LogoutView, PasswordResetView, PasswordChangeView,
+                                PasswordResetConfirmView,UserDetailsView,)
+from dj_rest_auth.registration.views import (RegisterView, VerifyEmailView, ResendEmailVerificationView)
+from dj_rest_auth.app_settings import api_settings
+from dj_rest_auth.utils import jwt_encode
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
@@ -14,8 +20,14 @@ from rest_framework.generics import GenericAPIView, CreateAPIView
 from rest_framework.exceptions import AuthenticationFailed
 from helper import CustomRedirect
 
-from user.serializers import SiteSerialiser,PasswordTokenSerializer
+from user.utils import complete_signup
+from user.serializers import SiteSerialiser,PasswordTokenSerializer, CustomResendEmailVerificationSerializer
 from user.models import User
+
+try:
+    from allauth.account.adapter import get_adapter
+except ImportError:
+    raise ImportError('allauth needs to be added to INSTALLED_APPS.')
 
 # Create your views here.
 
@@ -57,10 +69,12 @@ log_in_response=openapi.Schema(
         "access_expiration": openapi.Schema(
             title="Access expiration",
             type=openapi.TYPE_STRING,
+            read_only=True
         ),        
         "refresh_expiration": openapi.Schema(
             title="Refresh expiration",
             type=openapi.TYPE_STRING,
+            read_only=True
         ),        
     },
 )
@@ -253,5 +267,87 @@ class PasswordTokenCheckAPI(GenericAPIView):
 class SiteCreateAPIView(CreateAPIView):
     serializer_class = SiteSerialiser
 
+
 class CustomUserDetailsView(UserDetailsView):
+    """
+    Reads and updates UserModel fields
+    Accepts GET, PUT, PATCH methods.
+
+    Default accepted fields: username, first_name, last_name
+    Default display fields: pk, username, email, first_name, last_name
+    Read-only fields: pk, email
+
+    Returns UserModel fields.
+    """
     pass
+
+
+class CustomRegisterView(RegisterView):
+    def perform_create(self, serializer):
+        user = serializer.save(self.request)
+        if allauth_account_settings.EMAIL_VERIFICATION != \
+                allauth_account_settings.EmailVerificationMethod.MANDATORY:
+            if api_settings.USE_JWT:
+                self.access_token, self.refresh_token = jwt_encode(user)
+            elif not api_settings.SESSION_LOGIN:
+                # Session authentication isn't active either, so this has to be
+                #  token authentication
+                api_settings.TOKEN_CREATOR(self.token_model, user, serializer)
+
+        complete_signup(
+            self.request._request, user,
+            allauth_account_settings.EMAIL_VERIFICATION,
+            serializer.validated_data.get('site'),
+        )
+        return user
+    
+
+class CustomVerifyEmailView(VerifyEmailView):     
+    @swagger_auto_schema(auto_schema=None,)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+class CustomInVerifyEmailView(CustomVerifyEmailView):
+    def __init__(self, request, **kwargs: Any) -> None:
+        self.kwargs = kwargs
+        self.request=request
+        super(VerifyEmailView, self).__init__(**kwargs)
+
+class ConfirmEmailAPIView(GenericAPIView):
+  
+    @swagger_auto_schema(auto_schema=None,)
+    def get(self, request, key, *args, **kwargs):
+        
+        verify_email=CustomInVerifyEmailView(request, **kwargs)
+        path = reverse(viewname = 'user:rest_verify_email',current_app="user")
+
+        request.path = path
+        request.data["key"] = key
+        request.method="POST"
+        response = verify_email.post(request,*args, **kwargs)
+        redirect_url = request.GET.get('redirect_url', '')
+        valued = '?valid_email=False'
+
+        if response.status_code==200:
+            valued = '?valid_email=True'
+            return CustomRedirect(f'{redirect_url}{valued}')
+        else:
+            return CustomRedirect(f'{redirect_url}{valued}')
+            
+
+class CustomResendEmailVerificationView(ResendEmailVerificationView):
+    serializer_class = CustomResendEmailVerificationSerializer
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        site =request.data.pop("site")
+
+        email = EmailAddress.objects.filter(**serializer.validated_data).first()
+        if email and not email.verified:
+            adapter = get_adapter(request)
+            adapter.__class__.domain = site
+            email.send_confirmation(request)
+
+        return Response({'detail': _('ok')}, status=status.HTTP_200_OK)
+    

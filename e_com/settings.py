@@ -137,6 +137,8 @@ REST_AUTH = {
     'LOGIN_SERIALIZER': 'user.serializers.CustomLoginSerializer',
     'PASSWORD_RESET_SERIALIZER': 'user.serializers.CustomPasswordResetSerializer',
     'TOKEN_MODEL':None,
+    'REGISTER_SERIALIZER': 'user.serializers.CustomRegisterSerializer',
+     'USER_DETAILS_SERIALIZER': 'user.serializers.CustomUserDetailsSerializer',
     
     # 'PASSWORD_RESET_USE_SITES_DOMAIN': True,
     'USE_JWT': True,
@@ -153,6 +155,7 @@ SIMPLE_JWT = {
 SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
+# ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_ADAPTER="user.adapter.CustomDefaultAccountAdapter"
 
 # Static files (CSS, JavaScript, Images)
