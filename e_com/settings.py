@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'django_extensions',
     'dj_rest_auth.registration',
     'dj_rest_auth',
     'drf_yasg',
@@ -49,6 +51,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     
     'user',
+    'product',
     
 ]
 
@@ -67,7 +70,7 @@ ROOT_URLCONF = 'e_com.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -130,8 +133,23 @@ AUTH_USER_MODEL = 'user.User'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
-    )
+    ),    
+    "DEFAULT_RENDERER_CLASSES": [
+        "helper.MainRenderer",
+        "rest_framework.renderers.JSONRenderer"
+    ]
 }
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    }
+}
+
 
 REST_AUTH = {
     'LOGIN_SERIALIZER': 'user.serializers.CustomLoginSerializer',
@@ -140,7 +158,6 @@ REST_AUTH = {
     'REGISTER_SERIALIZER': 'user.serializers.CustomRegisterSerializer',
      'USER_DETAILS_SERIALIZER': 'user.serializers.CustomUserDetailsSerializer',
     
-    # 'PASSWORD_RESET_USE_SITES_DOMAIN': True,
     'USE_JWT': True,
     'JWT_AUTH_HTTPONLY':False,
     'JWT_AUTH_RETURN_EXPIRATION': True,
@@ -155,7 +172,6 @@ SIMPLE_JWT = {
 SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
-# ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_ADAPTER="user.adapter.CustomDefaultAccountAdapter"
 
 # Static files (CSS, JavaScript, Images)
@@ -163,6 +179,11 @@ ACCOUNT_ADAPTER="user.adapter.CustomDefaultAccountAdapter"
 
 STATIC_URL = 'static/'
 
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+STATIC_URL = '/static/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
+MEDIA_URL = "/media/"
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 

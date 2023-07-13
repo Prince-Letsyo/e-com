@@ -81,7 +81,7 @@ class PasswordTokenSerializer(serializers. Serializer):
         return attrs
 
 
-class SiteSerialiser(serializers.ModelSerializer):
+class SiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Site
         fields = [

@@ -19,9 +19,11 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView, CreateAPIView
 from rest_framework.exceptions import AuthenticationFailed
 from helper import CustomRedirect
+from helper.permissions import IsVerified
+from user.serializers.auth_serializers import SiteSerializer
 
 from user.utils import complete_signup
-from user.serializers import SiteSerialiser,PasswordTokenSerializer, CustomResendEmailVerificationSerializer
+from user.serializers import (PasswordTokenSerializer, CustomResendEmailVerificationSerializer)
 from user.models import User
 
 try:
@@ -128,7 +130,7 @@ class CustomLogoutView(LogoutView):
 
     Accepts/Returns nothing.
     """
-    # permission_classes = (AllowAny,)
+    permission_classes = (IsVerified,)
     
     @swagger_auto_schema(auto_schema=None,)
     def get(self, request, *args, **kwargs):
@@ -265,10 +267,12 @@ class PasswordTokenCheckAPI(GenericAPIView):
 
 
 class SiteCreateAPIView(CreateAPIView):
-    serializer_class = SiteSerialiser
+    serializer_class = SiteSerializer
+    permission_classes = (IsVerified,)
 
 
 class CustomUserDetailsView(UserDetailsView):
+    permission_classes = (IsVerified,)
     """
     Reads and updates UserModel fields
     Accepts GET, PUT, PATCH methods.

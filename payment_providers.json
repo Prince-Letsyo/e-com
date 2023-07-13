@@ -1,0 +1,27 @@
+[
+    {
+        "type":"mobile_transfer",
+        "provider": "MTN",
+        "name": "mtn_momo"
+    },
+    {
+        "type":"mobile_transfer",
+        "provider": "Vodafone",
+        "name": "voda_Cash"
+    },
+    {
+        "type":"mobile_transfer",
+        "provider": "Absa",
+        "name": "absa_transfer"
+    },
+    {
+        "type":"mobile_transfer",
+        "provider": "Ecobank",
+        "name": "ecobank_transfer"
+    },
+    {
+        "type":"mobile_transfer",
+        "provider": "Calbank",
+        "name": "calbank_transfer"
+    }
+]

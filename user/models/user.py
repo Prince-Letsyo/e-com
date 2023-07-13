@@ -1,10 +1,28 @@
 from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
                                         PermissionsMixin)
 from django.db import models
+from django.core.exceptions import ObjectDoesNotExist
 from helper import (Sex, TimeStamps, )
 
 
 class UserManager(BaseUserManager):
+    use_in_migrations = True
+    
+    def get_user_user_payments(self, user):
+        return user.userpayment_set.all()        
+
+    def get_user_shopping_session(self, user):
+        try:
+            return user.shoppingsession     
+        except ObjectDoesNotExist:
+            return None
+        
+    def get_user_user_address(self, user):
+        try:
+            return user.useraddress      
+        except ObjectDoesNotExist:
+            return None       
+    
     def create_user(self, email,username, first_name, last_name, password=None):
         if first_name is None:
             raise TypeError('User should provide an user name')
@@ -27,8 +45,8 @@ class UserManager(BaseUserManager):
         user = self.model(
             first_name=first_name,
             username=username,
-                          last_name=last_name, 
-                          email=self.normalize_email(email)
+            last_name=last_name, 
+            email=self.normalize_email(email)
                           )
         user.set_password(password)
         user.save()
