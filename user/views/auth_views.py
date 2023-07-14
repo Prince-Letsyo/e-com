@@ -268,7 +268,7 @@ class PasswordTokenCheckAPI(GenericAPIView):
 
 class SiteCreateAPIView(CreateAPIView):
     serializer_class = SiteSerializer
-    permission_classes = (IsVerified,)
+    # permission_classes = (IsVerified,)
 
 
 class CustomUserDetailsView(UserDetailsView):

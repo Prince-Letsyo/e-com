@@ -1,12 +1,11 @@
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, DestroyAPIView
+from rest_framework.parsers import MultiPartParser, FormParser
 from helper.permissions import IsVerified
 from product.models import (Product,ProductInventory, ProductCategory, 
-                            ProductDiscount,ProductAd, Promotion)
-from rest_framework.parsers import MultiPartParser, FormParser
-
+                            ProductDiscount,ProductAd, Promotion, CartItem)
 from product.serializers import (ProductSerializer,ProductInventorySerializer,
                                  ProductCategorySerializer, ProductDiscountSerializer,
-                                 ProductAdSerializer,PromotionSerializer)
+                                 ProductAdSerializer,PromotionSerializer, CartItemSerializer)
 
 
 class ProductListCreateAPIView(ListCreateAPIView):
@@ -25,7 +24,6 @@ class ProductInventoryListCreateAPIView(ListCreateAPIView):
     permission_classes = (IsVerified,)
     serializer_class=ProductInventorySerializer
     queryset=ProductInventory.objects.all()
-    permission_classes = (IsVerified,)
     
 
 class ProductInventoryRetrieveUpdateAPIView(RetrieveUpdateAPIView):
@@ -66,7 +64,7 @@ class PromotionListCreateAPIView(ListCreateAPIView):
     queryset=Promotion.objects.all()
     
 
-class PromotionRetrieveUpdateAPIView(RetrieveUpdateAPIView):
+class PromotionRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class=PromotionSerializer
     queryset=Promotion.objects.all()
     permission_classes = (IsVerified,)
@@ -79,10 +77,16 @@ class ProductAdListCreateAPIView(ListCreateAPIView):
     queryset=ProductAd.objects.all()
     
 
-class ProductAdRetrieveUpdateAPIView(RetrieveUpdateAPIView):
+class ProductAdRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = (IsVerified,)
     serializer_class=ProductAdSerializer
     queryset=ProductAd.objects.all()
     lookup_field="id"
     
+class CartItemDestroyAPIView(DestroyAPIView):
+    permission_classes = (IsVerified,)
+    serializer_class=CartItemSerializer
+    queryset=CartItem.objects.all()
+    lookup_field="id"
+    pass
