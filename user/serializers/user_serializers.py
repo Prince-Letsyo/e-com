@@ -1,5 +1,5 @@
 from allauth.account.models import EmailAddress
-from dj_rest_auth.serializers import UserDetailsSerializer
+from dj_rest_auth.serializers import (UserDetailsSerializer, JWTSerializerWithExpiration,JWTSerializer)
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from helper.utils import writable_nested_serializer
@@ -126,3 +126,9 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
                     )
         return super().to_internal_value(data)
 
+    
+class LogInResponseWithoutExpirationSerializer(JWTSerializer):
+    user = CustomUserDetailsSerializer(read_only=True,required=False)
+
+class LogInResponseWithExpirationSerializer(JWTSerializerWithExpiration):
+    user = CustomUserDetailsSerializer(read_only=True,required=False)

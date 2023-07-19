@@ -108,6 +108,4 @@ def send_email_confirmation(request, user, signup=False, email=None):
     if signup:
         adapter.stash_user(request, user_pk_to_url_str(user))
 
-def make_site_choice():
-    return [*[(obj.domain,obj.name) for obj in Site.objects.all()]] 
 

@@ -1,6 +1,5 @@
 
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
@@ -9,7 +8,6 @@ from django.utils.http import urlsafe_base64_encode
 from dj_rest_auth.app_settings import api_settings
 
 from user.shortcuts import get_current_site
-from user.utils import make_site_choice
 
 if 'allauth' in settings.INSTALLED_APPS:
     from allauth.account import app_settings as allauth_account_settings
@@ -45,8 +43,7 @@ class AllAuthPasswordResetForm(DefaultPasswordResetForm):
     
     def __init__(self, *args, **kwargs):
         super(AllAuthPasswordResetForm,self).__init__(*args, **kwargs)
-        self.fields['site']=forms.ChoiceField(required=False,
-            choices=make_site_choice())
+        self.fields['redirect']=forms.CharField(required=False)
 
     def clean_email(self):
         """
@@ -59,7 +56,7 @@ class AllAuthPasswordResetForm(DefaultPasswordResetForm):
         return self.cleaned_data["email"]
 
     def save(self, request, **kwargs):
-        current_site = get_current_site(request, self.cleaned_data['site'])
+        current_site = get_current_site(request, self.cleaned_data['redirect'])
         email = self.cleaned_data['email']
         token_generator = kwargs.get('token_generator', default_token_generator)
         for user in self.users:

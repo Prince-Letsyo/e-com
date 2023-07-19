@@ -2,8 +2,8 @@ from django.urls import path, re_path
 from dj_rest_auth.app_settings import api_settings
 from user.views import (CustomLoginView,CustomLogoutView,CustomPasswordChangeView,
                     CustomPasswordResetView,CustomPasswordResetConfirmView, PasswordTokenCheckAPI, 
-                    SiteCreateAPIView,CustomUserDetailsView, CustomRegisterView,
-                    CustomVerifyEmailView,ConfirmEmailAPIView, CustomResendEmailVerificationView)
+                    CustomUserDetailsView, CustomRegisterView, CustomVerifyEmailView,ConfirmEmailAPIView, 
+                    CustomResendEmailVerificationView)
 
 auth_urlpatterns = [
      path('login/', CustomLoginView.as_view(), name='log_in'),
@@ -19,15 +19,13 @@ auth_urlpatterns = [
      path('password/change/', CustomPasswordChangeView.as_view(), name='rest_user_details'),
      path('password/reset/', CustomPasswordResetView.as_view(), name='rest_password_reset'),
      path('password/reset/confirm/', CustomPasswordResetConfirmView.as_view(), name='rest_password_reset_confirm'),
-     path('site/', SiteCreateAPIView.as_view(), name='site'),
 ]
 
 if api_settings.USE_JWT:
-    from rest_framework_simplejwt.views import TokenVerifyView
-
-    from dj_rest_auth.jwt_auth import get_refresh_view
+    from user.views import CustomTokenVerifyView
+    from user.views.auth_views import CustomRefreshToken
 
     auth_urlpatterns += [
-        path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-        path('token/refresh/', get_refresh_view().as_view(), name='token_refresh'),
+        path('token/verify/', CustomTokenVerifyView.as_view(), name='token_verify'),
+        path('token/refresh/',CustomRefreshToken.as_view(), name='token_refresh'),
     ]

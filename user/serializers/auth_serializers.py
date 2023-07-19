@@ -1,7 +1,6 @@
 from django.conf import settings
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.forms import PasswordResetForm
-from django.contrib.sites.models import Site
 from django.utils.encoding import (force_str)
 from django.utils.http import urlsafe_base64_decode 
 from dj_rest_auth.serializers import ( LoginSerializer,PasswordResetSerializer)
@@ -11,7 +10,6 @@ from helper.choices import Sex
 
 from user.forms import AllAuthPasswordResetForm
 from user.models import User
-from user.utils import make_site_choice
 
 
 
@@ -21,7 +19,7 @@ class CustomLoginSerializer(LoginSerializer):
     pass
 
 class CustomPasswordResetSerializer(PasswordResetSerializer):
-    site = serializers.ChoiceField(required=False, choices=make_site_choice())
+    redirect = serializers.CharField(required=False)
 
     @property
     def password_reset_form_class(self):
@@ -79,23 +77,14 @@ class PasswordTokenSerializer(serializers. Serializer):
         except Exception as e:
             raise AuthenticationFailed('The reset link is invalid', 401)
         return attrs
-
-
-class SiteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Site
-        fields = [
-            "domain",
-            "name",
-        ]
-        
+ 
 
 class CustomRegisterSerializer(RegisterSerializer):
     first_name=serializers.CharField(max_length=150, required=True)
     last_name=serializers.CharField(max_length=150, required=True)
     middle_name=serializers.CharField(max_length=150, required=False)
     gender=serializers.ChoiceField(choices=Sex.choices, default=Sex.MALE)
-    site = serializers.ChoiceField(required=False, choices=make_site_choice())
+    redirect = serializers.CharField(required=False)
     
     def custom_signup(self, request, user):
         user.middle_name = self.validated_data.get('middle_name', '')
@@ -111,5 +100,5 @@ class CustomRegisterSerializer(RegisterSerializer):
             
 
 class CustomResendEmailVerificationSerializer(ResendEmailVerificationSerializer):
-    site = serializers.ChoiceField(required=False, choices=make_site_choice())
+    redirect = serializers.CharField(required=False)
     

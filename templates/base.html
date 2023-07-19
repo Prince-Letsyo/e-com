@@ -1,0 +1,37 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block head_title %} {% endblock %}</title>
+    {% block extra_head %}
+    {% endblock %}
+
+    {% block favicon %}
+    {% endblock %}
+    
+    {% block main_styles %}
+    {% endblock %}
+    
+    {% block extra_styles %}
+    {% endblock %}
+  </head>
+  <body>
+    {% block body %}
+      {% include "includes/navbar.html" %}
+      {% block content %}
+
+      {% endblock %}
+
+      {% block extra_body %}
+      {% endblock %}
+
+      {% block footer %}
+      {% endblock %}
+    {% endblock %}
+    
+    {% block extra_scripts %}
+    {% endblock %}
+  </body>
+</html>

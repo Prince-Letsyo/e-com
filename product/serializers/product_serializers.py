@@ -1,12 +1,7 @@
 from rest_framework import serializers
 from helper.utils import writable_nested_serializer
-from product.models.cart_item import CartItem
-from product.models.order_item import OrderItem
-from product.models.product import Product
-from product.models.review import ProductReview
-from product.serializers.cart_item_serializers import CartItemSerializer
-from product.serializers.order_serializers import OrderItemSerializer
-from product.serializers.review_serializers import ProductReviewSerializer
+from product.models import( CartItem,OrderItem, Product, ProductReview)
+from product.serializers import (CartItemSerializer,OrderItemSerializer, ProductReviewSerializer)
 
 
 class ProductSerializer(serializers.ModelSerializer):

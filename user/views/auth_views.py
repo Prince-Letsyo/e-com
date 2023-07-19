@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
+from dj_rest_auth.views import api_settings
 from django.utils.encoding import (smart_str)
 from django.utils.http import urlsafe_base64_decode
 from dj_rest_auth.views import (LoginView, LogoutView, PasswordResetView, PasswordChangeView,
@@ -12,15 +13,17 @@ from dj_rest_auth.views import (LoginView, LogoutView, PasswordResetView, Passwo
 from dj_rest_auth.registration.views import (RegisterView, VerifyEmailView, ResendEmailVerificationView)
 from dj_rest_auth.app_settings import api_settings
 from dj_rest_auth.utils import jwt_encode
+from dj_rest_auth.jwt_auth import get_refresh_view
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, CreateAPIView
+from rest_framework.generics import GenericAPIView
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.views import TokenVerifyView
 from helper import CustomRedirect
 from helper.permissions import IsVerified
-from user.serializers.auth_serializers import SiteSerializer
+from user.serializers.user_serializers import  LogInResponseWithExpirationSerializer, LogInResponseWithoutExpirationSerializer
 
 from user.utils import complete_signup
 from user.serializers import (PasswordTokenSerializer, CustomResendEmailVerificationSerializer)
@@ -30,56 +33,6 @@ try:
     from allauth.account.adapter import get_adapter
 except ImportError:
     raise ImportError('allauth needs to be added to INSTALLED_APPS.')
-
-# Create your views here.
-
-log_in_response=openapi.Schema(
-    type= openapi.TYPE_OBJECT,
-    title= "CustomLogin",
-    properties= {
-        "access": openapi.Schema(
-            title="Access",
-            type=openapi.TYPE_STRING,
-        ),        
-        "refresh": openapi.Schema(
-            title="Refresh",
-            type=openapi.TYPE_STRING,
-        ),        
-        "user": openapi.Schema(
-            title= "User",
-            type=openapi.TYPE_OBJECT,
-            properties= {
-                    "pk": openapi.Schema(
-                        title="Primary key",
-                        type=openapi.TYPE_INTEGER,
-                        read_only=True,
-                    ),
-                    "username": openapi.Schema(
-                        title="User name",
-                        type=openapi.TYPE_STRING
-                    ),
-                    "first_name": openapi.Schema(
-                        title="First name",
-                        type=openapi.TYPE_STRING
-                    ),
-                    "last_name": openapi.Schema(
-                        title="Last name",
-                        type=openapi.TYPE_STRING
-                    ),
-            },
-        ),        
-        "access_expiration": openapi.Schema(
-            title="Access expiration",
-            type=openapi.TYPE_STRING,
-            read_only=True
-        ),        
-        "refresh_expiration": openapi.Schema(
-            title="Refresh expiration",
-            type=openapi.TYPE_STRING,
-            read_only=True
-        ),        
-    },
-)
 
 
 class CustomLoginView(LoginView):
@@ -93,7 +46,10 @@ class CustomLoginView(LoginView):
     Return the REST Framework Token Object's key.
     """
     
-    @swagger_auto_schema(responses={200:log_in_response},)
+    @swagger_auto_schema(responses={
+        200:LogInResponseWithExpirationSerializer \
+        if api_settings.JWT_AUTH_RETURN_EXPIRATION \
+        else LogInResponseWithoutExpirationSerializer },)
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -143,7 +99,7 @@ class CustomLogoutView(LogoutView):
     
 password_change_response=openapi.Schema(
     type= openapi.TYPE_OBJECT,
-    title= " CustomPasswordChange",
+    title= "CustomPasswordChange",
     properties= {
         "detail": openapi.Schema(
             type=openapi.TYPE_STRING,
@@ -175,7 +131,7 @@ password_reset_response=openapi.Schema(
             default='Password reset e-mail has been sent.'
         ),      
     },
-    )
+)
 
 
 class CustomPasswordResetView(PasswordResetView):
@@ -265,10 +221,8 @@ class PasswordTokenCheckAPI(GenericAPIView):
                          'uidb64': serializer.data['uidb64']},
                         status=status.HTTP_200_OK)
 
-
-class SiteCreateAPIView(CreateAPIView):
-    serializer_class = SiteSerializer
-    # permission_classes = (IsVerified,)
+    
+    
 
 
 class CustomUserDetailsView(UserDetailsView):
@@ -287,6 +241,11 @@ class CustomUserDetailsView(UserDetailsView):
 
 
 class CustomRegisterView(RegisterView):
+    
+    @swagger_auto_schema(responses={201:LogInResponseWithoutExpirationSerializer},)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+    
     def perform_create(self, serializer):
         user = serializer.save(self.request)
         if allauth_account_settings.EMAIL_VERIFICATION != \
@@ -301,7 +260,7 @@ class CustomRegisterView(RegisterView):
         complete_signup(
             self.request._request, user,
             allauth_account_settings.EMAIL_VERIFICATION,
-            serializer.validated_data.get('site'),
+            serializer.validated_data.get('redirect'),
         )
         return user
     
@@ -337,15 +296,30 @@ class ConfirmEmailAPIView(GenericAPIView):
             return CustomRedirect(f'{redirect_url}{valued}')
         else:
             return CustomRedirect(f'{redirect_url}{valued}')
-            
+
+
+verify_email_resend=openapi.Schema(
+    type= openapi.TYPE_OBJECT,
+    title= " CustomResendEmailVerificationView",
+    properties= {
+        "detail": openapi.Schema(
+            type=openapi.TYPE_STRING,
+            default='Ok'
+        ),      
+    },
+)         
 
 class CustomResendEmailVerificationView(ResendEmailVerificationView):
     serializer_class = CustomResendEmailVerificationSerializer
     
+    @swagger_auto_schema(responses={200:verify_email_resend},)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+    
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        site =request.data.pop("site")
+        site =request.data.pop("redirect")
 
         email = EmailAddress.objects.filter(**serializer.validated_data).first()
         if email and not email.verified:
@@ -354,4 +328,45 @@ class CustomResendEmailVerificationView(ResendEmailVerificationView):
             email.send_confirmation(request)
 
         return Response({'detail': _('ok')}, status=status.HTTP_200_OK)
-    
+
+verify_token = openapi.Schema(
+    type= openapi.TYPE_OBJECT,
+    title= " CustomResendEmailVerificationView",
+    properties= {
+        "data": openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={}
+        ),      
+    },
+)   
+
+class CustomTokenVerifyView(TokenVerifyView):
+    @swagger_auto_schema(responses={200:verify_token},)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+
+refresh_token = openapi.Schema(
+    type= openapi.TYPE_OBJECT,
+    title= " CustomResendEmailVerificationView",
+    properties= {
+        "data": openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "access": openapi.Schema(
+            title="Access token",
+            type=openapi.TYPE_STRING,
+        ),
+            "access_expiration": openapi.Schema(
+            title="Access expiration",
+            type=openapi.FORMAT_DATETIME,
+        )if api_settings.JWT_AUTH_RETURN_EXPIRATION else None
+            }
+        ),      
+    },
+)   
+
+class CustomRefreshToken(get_refresh_view()):
+    @swagger_auto_schema(responses={200:refresh_token},)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)

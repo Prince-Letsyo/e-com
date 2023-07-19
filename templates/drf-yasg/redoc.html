@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block head_title %}{{ title }}{% endblock %}
+{% block extra_head %}
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% endblock %}
+
+{% block favicon %}
+    <link rel="icon" type="image/png" href="{% static 'drf-yasg/redoc/redoc-logo.png' %}"/>
+{% endblock %}
+{% block extra_styles %}
+<link rel="stylesheet" type="text/css" href="{% static 'drf-yasg/style.css' %}"/>
+{% endblock %}
+
+{% block content %}
+    <div id="redoc-placeholder"></div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+    <script id="redoc-settings" type="application/json">{{ redoc_settings | safe }}</script>
+    <script src="{% static 'drf-yasg/insQ.min.js' %}"></script>
+    <script src="{% static 'drf-yasg/redoc-init.js' %}"></script>
+    <script src="{% static 'drf-yasg/redoc/redoc.min.js' %}"></script>
+{% endblock %}
+
