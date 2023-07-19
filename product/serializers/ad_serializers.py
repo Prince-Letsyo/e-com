@@ -11,4 +11,4 @@ class ProductAdSerializer(serializers.ModelSerializer):
             "image",
             "slug",
         ]
-        read_only_fields = ('slug',)
+        read_only_fields = ("slug",)

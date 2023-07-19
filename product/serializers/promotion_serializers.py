@@ -7,7 +7,7 @@ from product.serializers.product_serializers import ProductSerializer
 
 class PromotionSerializer(serializers.ModelSerializer):
     products = ProductSerializer(required=False, many=True)
-    
+
     class Meta:
         model = Promotion
         fields = [
@@ -20,20 +20,19 @@ class PromotionSerializer(serializers.ModelSerializer):
             "products",
         ]
 
-        
     def to_internal_value(self, data):
         products = data.pop("products", None)
-        
+
         if products:
             if isinstance(products, list):
                 for products in products:
                     writable_nested_serializer(
-                        data=products, 
+                        data=products,
                         Modal=Product,
                         error=serializers.ValidationError(
-                            {"products": "Product does not exist."}, 
-                            404),
-                        Serializer=ProductSerializer
-                        )
+                            {"products": "Product does not exist."}, 404
+                        ),
+                        Serializer=ProductSerializer,
+                    )
 
         return super().to_internal_value(data)

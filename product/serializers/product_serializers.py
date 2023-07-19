@@ -1,27 +1,31 @@
 from rest_framework import serializers
 from helper.utils import writable_nested_serializer
-from product.models import( CartItem,OrderItem, Product, ProductReview)
-from product.serializers import (CartItemSerializer,OrderItemSerializer, ProductReviewSerializer)
+from product.models import CartItem, OrderItem, Product, ProductReview
+from product.serializers import (
+    CartItemSerializer,
+    OrderItemSerializer,
+    ProductReviewSerializer,
+)
 
 
 class ProductSerializer(serializers.ModelSerializer):
     product_cart = CartItemSerializer(required=False)
     product_reviews = ProductReviewSerializer(required=False, many=True)
     product_order = OrderItemSerializer(required=False)
-    
+
     class Meta:
-        extra_fields=[]
+        extra_fields = []
         model = Product
-        
-        if hasattr(model, 'product_cart'):
+
+        if hasattr(model, "product_cart"):
             extra_fields.append("product_cart")
-            
-        if hasattr(model, 'product_reviews'):
+
+        if hasattr(model, "product_reviews"):
             extra_fields.append("product_reviews")
 
-        if hasattr(model, 'product_order'):
+        if hasattr(model, "product_order"):
             extra_fields.append("product_order")
-        
+
         fields = [
             "id",
             "name",
@@ -34,44 +38,45 @@ class ProductSerializer(serializers.ModelSerializer):
             "discount",
             "delivery_type",
             "shipping_type",
-            "deleted_at", 
-            *extra_fields
+            "deleted_at",
+            *extra_fields,
         ]
-        read_only_fields = ('sku',)
-    
+        read_only_fields = ("sku",)
+
     def to_internal_value(self, data):
         product_cart = data.pop("product_cart", None)
         product_reviews = data.pop("product_reviews", None)
         product_order = data.pop("product_order", None)
-        
+
         if product_cart:
             writable_nested_serializer(
-                data=product_cart, 
+                data=product_cart,
                 Modal=CartItem,
                 error=serializers.ValidationError(
-                    {"product_cart": "Cart does not exist."}, 
-                    404),
-                Serializer=CartItemSerializer
-                )
-        
+                    {"product_cart": "Cart does not exist."}, 404
+                ),
+                Serializer=CartItemSerializer,
+            )
+
         if product_order:
             writable_nested_serializer(
-                data=product_order, 
-                Modal=OrderItem, 
+                data=product_order,
+                Modal=OrderItem,
                 error=serializers.ValidationError(
-                    {"product_order": "Order item does not exist."}, 404),
-                Serializer=OrderItemSerializer
+                    {"product_order": "Order item does not exist."}, 404
+                ),
+                Serializer=OrderItemSerializer,
             )
-        
+
         if product_reviews:
             if isinstance(product_reviews, list):
                 for product_review in product_reviews:
                     writable_nested_serializer(
-                        data=product_review, 
-                        Modal=ProductReview, 
+                        data=product_review,
+                        Modal=ProductReview,
                         error=serializers.ValidationError(
-                            {"product_reviews": "Product review does not exist."}, 404),
-                        Serializer=ProductReviewSerializer
+                            {"product_reviews": "Product review does not exist."}, 404
+                        ),
+                        Serializer=ProductReviewSerializer,
                     )
         return super().to_internal_value(data)
-

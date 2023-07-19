@@ -2,7 +2,7 @@ from rest_framework import serializers
 from user.models import UserPayment
 
 
-class UserPaymentSerializer(serializers.ModelSerializer):    
+class UserPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserPayment
         fields = [
@@ -13,4 +13,3 @@ class UserPaymentSerializer(serializers.ModelSerializer):
             "account_no",
             "expiry",
         ]
-        

@@ -7,37 +7,40 @@ class ProductReviewAdminForm(forms.ModelForm):
     class Meta:
         model = ProductReview
         fields = (
-        "product",
-        "rating",
-        "desc",
+            "product",
+            "rating",
+            "desc",
         )
-        
+
+
 class ProductReviewAdmin(admin.ModelAdmin):
     form = ProductReviewAdminForm
     model = ProductReview
 
+
 class ProductReviewInline(admin.StackedInline):
-    extra=0
+    extra = 0
     form = ProductReviewAdminForm
     model = ProductReview
-    
-    
-    
+
+
 class UserReviewSessionAdminForm(forms.ModelForm):
     class Meta:
-        model=UserReviewSession
-        fields=[
+        model = UserReviewSession
+        fields = [
             "id",
             "user",
             "review",
         ]
 
+
 class UserReviewSessionAdmin(admin.ModelAdmin):
     form = UserReviewSessionAdminForm
     model = UserReviewSession
 
+
 class UserReviewSessionInline(admin.StackedInline):
-    extra=0
+    extra = 0
     form = UserReviewSessionAdminForm
     model = UserReviewSession
 

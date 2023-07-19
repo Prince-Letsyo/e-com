@@ -14,33 +14,38 @@ class UpDateAt(models.Model):
     class Meta:
         abstract = True
 
+
 class DeletedAt(models.Model):
-    deleted_at = models.DateTimeField(null=True,blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         abstract = True
 
-class TimeStamps(CreatedAt,UpDateAt):
+
+class TimeStamps(CreatedAt, UpDateAt):
     class Meta:
         abstract = True
+
 
 class CreatedAtWithOrder(CreatedAt):
     class Meta:
         abstract = True
-        ordering = ('-created_at',)
+        ordering = ("-created_at",)
 
-class TimeStampsWithOrder(CreatedAt,UpDateAt):
+
+class TimeStampsWithOrder(CreatedAt, UpDateAt):
     class Meta:
         abstract = True
-        ordering = ('-created_at',)
+        ordering = ("-created_at",)
 
-class TimeDeletedStampsWithOrder(CreatedAt,UpDateAt, DeletedAt):
+
+class TimeDeletedStampsWithOrder(CreatedAt, UpDateAt, DeletedAt):
     class Meta:
         abstract = True
-        ordering = ('-created_at',)
+        ordering = ("-created_at",)
 
 
 class TrackingModel(CreatedAt, UpDateAt):
     class Meta:
         abstract = True
-        ordering = ('-created_at',)
+        ordering = ("-created_at",)

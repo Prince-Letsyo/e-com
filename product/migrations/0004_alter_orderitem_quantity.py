@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('product', '0003_remove_shoppingsession_total_and_more'),
+        ("product", "0003_remove_shoppingsession_total_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='orderitem',
-            name='quantity',
+            model_name="orderitem",
+            name="quantity",
             field=models.IntegerField(default=1),
         ),
     ]

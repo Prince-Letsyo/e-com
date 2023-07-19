@@ -4,39 +4,38 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('product', '0002_initial'),
+        ("product", "0002_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='shoppingsession',
-            name='total',
+            model_name="shoppingsession",
+            name="total",
         ),
         migrations.AddField(
-            model_name='shoppingsession',
-            name='subtotal',
+            model_name="shoppingsession",
+            name="subtotal",
             field=models.DecimalField(decimal_places=2, default=0, max_digits=16),
         ),
         migrations.AlterField(
-            model_name='cartitem',
-            name='quantity',
+            model_name="cartitem",
+            name="quantity",
             field=models.IntegerField(default=1),
         ),
         migrations.AlterField(
-            model_name='order',
-            name='total',
+            model_name="order",
+            name="total",
             field=models.DecimalField(decimal_places=2, default=0, max_digits=16),
         ),
         migrations.AlterField(
-            model_name='product',
-            name='price',
+            model_name="product",
+            name="price",
             field=models.DecimalField(decimal_places=2, default=0, max_digits=16),
         ),
         migrations.AlterField(
-            model_name='productdiscount',
-            name='discount_percent',
+            model_name="productdiscount",
+            name="discount_percent",
             field=models.DecimalField(decimal_places=2, max_digits=2),
         ),
     ]

@@ -13,6 +13,10 @@ def get_current_site(request, domain):
     if apps.is_installed("django.contrib.sites"):
         from django.contrib.sites.models import Site
 
-        return  Site.objects.get_by_natural_key(domain) if domain !="" else Site.objects.get_current(request)
+        return (
+            Site.objects.get_by_natural_key(domain)
+            if domain != ""
+            else Site.objects.get_current(request)
+        )
     else:
         return RequestSite(request)

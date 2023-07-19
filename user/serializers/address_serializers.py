@@ -2,7 +2,7 @@ from rest_framework import serializers
 from user.models import UserAddress
 
 
-class UserAddressSerializer(serializers.ModelSerializer):    
+class UserAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAddress
         fields = [
@@ -14,6 +14,5 @@ class UserAddressSerializer(serializers.ModelSerializer):
             "postal_code",
             "country",
             "telephone",
-            "mobile"
+            "mobile",
         ]
-        

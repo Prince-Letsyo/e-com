@@ -11,4 +11,3 @@ class CartItemSerializer(serializers.ModelSerializer):
             "product",
             "quantity",
         ]
-

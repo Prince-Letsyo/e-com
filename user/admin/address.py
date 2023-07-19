@@ -8,11 +8,12 @@ from user.models.address import UserAddress
 
 # Register your models here.
 
+
 class UserAddressFormAdmin(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["city"].widget.attrs.update({"class":"user_address_city"})
-        self.fields["country"].widget.attrs.update({"class":"user_address_country"})
+        self.fields["city"].widget.attrs.update({"class": "user_address_city"})
+        self.fields["country"].widget.attrs.update({"class": "user_address_country"})
 
     class Meta:
         model = UserAddress
@@ -27,18 +28,20 @@ class UserAddressFormAdmin(forms.ModelForm):
             "telephone",
         ]
 
+
 class UserAddressAdmin(admin.ModelAdmin):
-    form=UserAddressFormAdmin
-    list_display = ['user', 'city', 'country']
-    search_fields = ['city']
-    
+    form = UserAddressFormAdmin
+    list_display = ["user", "city", "country"]
+    search_fields = ["city"]
+
     class Media:
-        js = ('js/admin/user/user_address_admin.js',)
+        js = ("js/admin/user/user_address_admin.js",)
+
 
 admin.site.register(UserAddress, UserAddressAdmin)
 
 
 class UserAddressInline(admin.StackedInline):
-    form=UserAddressFormAdmin
+    form = UserAddressFormAdmin
     extra = 0
-    model =  UserAddress
+    model = UserAddress

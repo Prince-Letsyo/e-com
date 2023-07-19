@@ -62,6 +62,7 @@ def complete_signup(request, user, email_verification, success_url, signal_kwarg
         signal_kwargs=signal_kwargs,
     )
 
+
 def send_email_confirmation(request, user, signup=False, email=None):
     """
     E-mail verification mails are sent:
@@ -107,5 +108,3 @@ def send_email_confirmation(request, user, signup=False, email=None):
             )
     if signup:
         adapter.stash_user(request, user_pk_to_url_str(user))
-
-
