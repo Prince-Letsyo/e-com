@@ -1,3 +1,4 @@
+from django.contrib.sites.models import Site
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -9,6 +10,7 @@ from helper import (
     Sex,
     TimeStamps,
 )
+from helper import DeletedAt
 
 
 class UserManager(BaseUserManager):
@@ -94,3 +96,11 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStamps):
 
     def __str__(self):
         return self.email
+
+
+class SiteOwner(DeletedAt):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="site_owner"
+    )
+    public_key = models.CharField(max_length=250, null=True, blank=True)
+    secret_key = models.CharField(max_length=250, null=True, blank=True)

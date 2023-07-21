@@ -8,7 +8,7 @@ from rest_framework import permissions
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from dj_rest_auth.jwt_auth import JWTCookieAuthentication
 from django.shortcuts import redirect
-
+from helper.permissions import IsVerifiedSiteOwner
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -20,7 +20,7 @@ schema_view = get_schema_view(
         license=openapi.License(name="BSD license"),
     ),
     public=True,
-    permission_classes=(permissions.IsAdminUser,),
+    permission_classes=(IsVerifiedSiteOwner,),
     authentication_classes=(
         JWTCookieAuthentication,
         SessionAuthentication,

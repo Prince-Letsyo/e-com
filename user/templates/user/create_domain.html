@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block content %}
+
+{% if perms.user.add_siteowner %}
+yes
+{% else %}
+no
+{% endif %}
+
+{% endblock %}

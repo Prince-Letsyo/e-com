@@ -150,7 +150,6 @@ SWAGGER_SETTINGS = {
 
 REST_AUTH = {
     "LOGIN_SERIALIZER": "user.serializers.CustomLoginSerializer",
-    "PASSWORD_RESET_SERIALIZER": "user.serializers.CustomPasswordResetSerializer",
     "TOKEN_MODEL": None,
     "REGISTER_SERIALIZER": "user.serializers.CustomRegisterSerializer",
     "USER_DETAILS_SERIALIZER": "user.serializers.CustomUserDetailsSerializer",

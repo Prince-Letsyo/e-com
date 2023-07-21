@@ -1,3 +1,8 @@
+from user.api_key import decrypt_dict
+from allauth.account.adapter import get_current_site
+from user.shortcuts import get_current_site as rest_get_current_site
+
+
 def filtered_cities(lst, country):
     filtered_cities = []
     if country != "all":
@@ -50,3 +55,20 @@ def writable_nested_serializer(data, Modal, error, Serializer):
         serializer = Serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+
+def get_domain(request, site_owner_model):
+    public_key = request.META.get("HTTP_PUBLIC_KEY")
+    secret_key = request.META.get("HTTP_SECRET_KEY")
+
+    if public_key and secret_key:
+        site_owner = site_owner_model.objects.get(
+            public_key=public_key, secret_key=secret_key
+        )
+        data = decrypt_dict(
+            password=site_owner.user.username, ct=public_key, salt=secret_key
+        )
+
+        domain = data.get("domain", "")
+        return rest_get_current_site(request, domain)
+    return get_current_site(request)

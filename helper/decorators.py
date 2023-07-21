@@ -2,6 +2,12 @@ from functools import wraps
 import json
 from helper.utils import *
 
+from django.urls import reverse
+from dj_rest_auth.forms import build_absolute_uri
+from rest_framework.response import Response
+from rest_framework import status
+from user.api_key import decrypt_dict
+
 
 def fetch_data(filtered_func):
     def decorate(func):
@@ -24,6 +30,56 @@ def fetch_data(filtered_func):
                 return func(*args, **kwargs)
             except Exception as e:
                 raise Exception(*e.args)
+
+        return wrapper
+
+    return decorate
+
+
+def check_domain(site_owner_model):
+    def decorate(view_func):
+        @wraps(view_func)
+        def wrapper(self, request, *args, **kwargs):
+            public_key = request.META.get("HTTP_PUBLIC_KEY")
+            secret_key = request.META.get("HTTP_SECRET_KEY")
+
+            if public_key and secret_key:
+                try:
+                    site_owner = site_owner_model.objects.get(
+                        public_key=public_key, secret_key=secret_key
+                    )
+                    decrypt_dict(
+                        password=site_owner.user.username,
+                        ct=public_key,
+                        salt=secret_key,
+                    )
+                    return view_func(request, *args, **kwargs)
+                except site_owner_model.DoesNotExist:
+                    url = build_absolute_uri(
+                        request,
+                        reverse(
+                            "user:create_domain",
+                            current_app="user",
+                            args=[],
+                        ),
+                    )
+                    response_data = {
+                        "domain": f"Your domain does not on the server, Vist: {url} to add your domain."
+                    }
+                except Exception:
+                    response_data = {
+                        "keys": "Invalid HTTP_PUBLIC_KEY or HTTP_SECRET_KEY"
+                    }
+                return Response(response_data, status=status.HTTP_403_FORBIDDEN)
+            else:
+                response_data = {}
+                if public_key is None:
+                    response_data["HTTP_PUBLIC_KEY"] = "HTTP_PUBLIC_KEY is required"
+                if secret_key is None:
+                    response_data["HTTP_SECRET_KEY"] = "HTTP_SECRET_KEY is required"
+                return Response(
+                    {"errors": response_data}, status=status.HTTP_401_UNAUTHORIZED
+                )
 
         return wrapper
 

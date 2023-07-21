@@ -24,7 +24,6 @@ class TestSetUp(APITestCase):
             "last_name": "string",
             "middle_name": "string",
             "gender": "M",
-            # "site": "http://example.com"
         }
         return super().setUp()
 

@@ -1,6 +1,3 @@
-from typing import Any
-from allauth.account import app_settings as allauth_account_settings
-from allauth.account.models import EmailAddress
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.contrib.sites.shortcuts import get_current_site
@@ -22,7 +19,6 @@ from dj_rest_auth.registration.views import (
     ResendEmailVerificationView,
 )
 from dj_rest_auth.app_settings import api_settings
-from dj_rest_auth.utils import jwt_encode
 from dj_rest_auth.jwt_auth import get_refresh_view
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -32,23 +28,34 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.views import TokenVerifyView
 from helper import CustomRedirect
+from helper.decorators import check_domain
 from helper.permissions import IsVerified
 from user.serializers.user_serializers import (
     LogInResponseWithExpirationSerializer,
     LogInResponseWithoutExpirationSerializer,
 )
 
-from user.utils import complete_signup
 from user.serializers import (
     PasswordTokenSerializer,
-    CustomResendEmailVerificationSerializer,
 )
-from user.models import User
+from user.models import User, SiteOwner
+from helper.utils import get_domain
 
-try:
-    from allauth.account.adapter import get_adapter
-except ImportError:
-    raise ImportError("allauth needs to be added to INSTALLED_APPS.")
+
+site_keys = [
+    openapi.Parameter(
+        name="Public-Key",
+        in_=openapi.IN_HEADER,
+        type=openapi.TYPE_STRING,
+        required=True,
+    ),
+    openapi.Parameter(
+        name="Secret-Key",
+        in_=openapi.IN_HEADER,
+        type=openapi.TYPE_STRING,
+        required=True,
+    ),
+]
 
 
 class CustomLoginView(LoginView):
@@ -68,6 +75,7 @@ class CustomLoginView(LoginView):
             if api_settings.JWT_AUTH_RETURN_EXPIRATION
             else LogInResponseWithoutExpirationSerializer
         },
+        manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
@@ -108,12 +116,15 @@ class CustomLogoutView(LogoutView):
 
     @swagger_auto_schema(
         auto_schema=None,
+        manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        request_body=log_out_request, responses={200: log_out_response}
+        request_body=log_out_request,
+        responses={200: log_out_response},
+        manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
@@ -138,7 +149,10 @@ class CustomPasswordChangeView(PasswordChangeView):
     Returns the success/fail message.
     """
 
-    @swagger_auto_schema(responses={200: password_change_response})
+    @swagger_auto_schema(
+        responses={200: password_change_response},
+        manual_parameters=site_keys,
+    )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -162,7 +176,11 @@ class CustomPasswordResetView(PasswordResetView):
     Returns the success/fail message.
     """
 
-    @swagger_auto_schema(responses={200: password_reset_response})
+    @check_domain(site_owner_model=SiteOwner)
+    @swagger_auto_schema(
+        responses={200: password_reset_response},
+        manual_parameters=site_keys,
+    )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -197,7 +215,10 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     Returns the success/fail message.
     """
 
-    @swagger_auto_schema(responses={200: password_reset_confirm_response})
+    @swagger_auto_schema(
+        responses={200: password_reset_confirm_response},
+        manual_parameters=site_keys,
+    )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -209,7 +230,7 @@ class PasswordTokenCheckAPI(GenericAPIView):
         auto_schema=None,
     )
     def get(self, request, uidb64, token):
-        redirect_url = request.GET.get("redirect_url", "")
+        redirect_url = get_domain(request, SiteOwner).domain
         current_site = get_current_site(request)
         valued = "?token_valid=False"
         try:
@@ -235,6 +256,9 @@ class PasswordTokenCheckAPI(GenericAPIView):
         except Exception as e:
             raise AuthenticationFailed("The reset link is invalid", 401)
 
+    @swagger_auto_schema(
+        manual_parameters=site_keys,
+    )
     def post(self, request, uidb64, token):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -261,48 +285,48 @@ class CustomUserDetailsView(UserDetailsView):
 
     Returns UserModel fields.
     """
-    pass
+
+    @swagger_auto_schema(
+        manual_parameters=site_keys,
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        manual_parameters=site_keys,
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        manual_parameters=site_keys,
+    )
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
 
 
 class CustomRegisterView(RegisterView):
+    @check_domain(site_owner_model=SiteOwner)
     @swagger_auto_schema(
+        manual_parameters=site_keys,
         responses={201: LogInResponseWithoutExpirationSerializer},
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
-    def perform_create(self, serializer):
-        user = serializer.save(self.request)
-        if (
-            allauth_account_settings.EMAIL_VERIFICATION
-            != allauth_account_settings.EmailVerificationMethod.MANDATORY
-        ):
-            if api_settings.USE_JWT:
-                self.access_token, self.refresh_token = jwt_encode(user)
-            elif not api_settings.SESSION_LOGIN:
-                # Session authentication isn't active either, so this has to be
-                #  token authentication
-                api_settings.TOKEN_CREATOR(self.token_model, user, serializer)
-
-        complete_signup(
-            self.request._request,
-            user,
-            allauth_account_settings.EMAIL_VERIFICATION,
-            serializer.validated_data.get("redirect"),
-        )
-        return user
-
 
 class CustomVerifyEmailView(VerifyEmailView):
+    @check_domain(site_owner_model=SiteOwner)
     @swagger_auto_schema(
         auto_schema=None,
+        manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
 
 class CustomInVerifyEmailView(CustomVerifyEmailView):
-    def __init__(self, request, **kwargs: Any) -> None:
+    def __init__(self, request, **kwargs):
         self.kwargs = kwargs
         self.request = request
         super(VerifyEmailView, self).__init__(**kwargs)
@@ -320,7 +344,8 @@ class ConfirmEmailAPIView(GenericAPIView):
         request.data["key"] = key
         request.method = "POST"
         response = verify_email.post(request, *args, **kwargs)
-        redirect_url = request.GET.get("redirect_url", "")
+
+        redirect_url = get_domain(request, SiteOwner).domain
         valued = "?valid_email=False"
 
         if response.status_code == 200:
@@ -340,26 +365,13 @@ verify_email_resend = openapi.Schema(
 
 
 class CustomResendEmailVerificationView(ResendEmailVerificationView):
-    serializer_class = CustomResendEmailVerificationSerializer
-
+    @check_domain(site_owner_model=SiteOwner)
     @swagger_auto_schema(
         responses={200: verify_email_resend},
+        manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        site = request.data.pop("redirect")
-
-        email = EmailAddress.objects.filter(**serializer.validated_data).first()
-        if email and not email.verified:
-            adapter = get_adapter(request)
-            adapter.__class__.domain = site
-            email.send_confirmation(request)
-
-        return Response({"detail": _("ok")}, status=status.HTTP_200_OK)
 
 
 verify_token = openapi.Schema(
@@ -374,6 +386,7 @@ verify_token = openapi.Schema(
 class CustomTokenVerifyView(TokenVerifyView):
     @swagger_auto_schema(
         responses={200: verify_token},
+        manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
@@ -405,6 +418,7 @@ refresh_token = openapi.Schema(
 class CustomRefreshToken(get_refresh_view()):
     @swagger_auto_schema(
         responses={200: refresh_token},
+        manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
