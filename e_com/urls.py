@@ -30,24 +30,30 @@ schema_view = get_schema_view(
 
 
 class CustomSwaggerView(schema_view):
-    def initial(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return
-        return super().initial(request, *args, **kwargs)
-
-    def get(self, request, version="", format=None):
+    def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect("account_login")
-        return super().get(request, version, format)
+
+        if not request.user.is_authenticated:
+            return redirect("account_login")
+
+        for permission in self.get_permissions():
+            if not permission.has_permission(request, self):
+                return redirect("user_profile:index")
+
+        return super(CustomSwaggerView, self).dispatch(request, *args, **kwargs)
 
 
 urlpatterns = [
     path(
         "",
+        include("user_profile.urls"),
+    ),
+    path(
+        "swagger/",
         CustomSwaggerView.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-    # path('', include('user_profile.urls')),
     path(
         "redoc.json", CustomSwaggerView.without_ui(cache_timeout=0), name="schema-json"
     ),

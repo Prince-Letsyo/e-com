@@ -1,13 +1,15 @@
 from django.conf import settings
-from rest_framework.exceptions import AuthenticationFailed
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-from dj_rest_auth.serializers import LoginSerializer
+from django.contrib.auth.forms import PasswordResetForm
+from dj_rest_auth.serializers import LoginSerializer, PasswordResetSerializer
 from dj_rest_auth.registration.serializers import (
     RegisterSerializer,
 )
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
 from helper.choices import Sex
+from user.forms import AllAuthPasswordResetForm
 
 from user.models import User
 
@@ -62,3 +64,12 @@ class CustomRegisterSerializer(RegisterSerializer):
         data["first_name"] = self.validated_data.get("first_name", "")
         data["last_name"] = self.validated_data.get("last_name", "")
         return data
+
+
+class CustomPasswordResetSerializer(PasswordResetSerializer):
+    @property
+    def password_reset_form_class(self):
+        if "allauth" in settings.INSTALLED_APPS:
+            return AllAuthPasswordResetForm
+        else:
+            return PasswordResetForm

@@ -150,9 +150,10 @@ SWAGGER_SETTINGS = {
 
 REST_AUTH = {
     "LOGIN_SERIALIZER": "user.serializers.CustomLoginSerializer",
-    "TOKEN_MODEL": None,
     "REGISTER_SERIALIZER": "user.serializers.CustomRegisterSerializer",
+    "PASSWORD_RESET_SERIALIZER": "user.serializers.CustomPasswordResetSerializer",
     "USER_DETAILS_SERIALIZER": "user.serializers.CustomUserDetailsSerializer",
+    "TOKEN_MODEL": None,
     "USE_JWT": True,
     "JWT_AUTH_HTTPONLY": False,
     "JWT_AUTH_RETURN_EXPIRATION": True,
@@ -168,6 +169,7 @@ SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "username"
 ACCOUNT_ADAPTER = "user.adapter.CustomDefaultAccountAdapter"
+ACCOUNT_FORMS = {"signup": "user.forms.CustomSignupForm"}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/

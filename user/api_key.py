@@ -29,10 +29,10 @@ def encrypt_dict(password, data):
     ct = encryptor.update(serialized_data) + encryptor.finalize()
 
     # Return the ciphertext, salt, and IV (you can store the salt and IV with the encrypted data)
-    return ct, salt
+    return ct, salt, iv
 
 
-def decrypt_dict(password, salt, ct):
+def decrypt_dict(password, salt, ct, iv):
     # Prepare the encryption key using PBKDF2 with the provided password and salt
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
@@ -42,7 +42,6 @@ def decrypt_dict(password, salt, ct):
     )
     key = kdf.derive(password)
 
-    iv = ct[:16]
     # Decrypt data using AES in CFB mode
     cipher = Cipher(algorithms.AES(key), modes.CFB(iv))
     decryptor = cipher.decryptor()

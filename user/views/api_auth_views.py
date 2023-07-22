@@ -230,8 +230,7 @@ class PasswordTokenCheckAPI(GenericAPIView):
         auto_schema=None,
     )
     def get(self, request, uidb64, token):
-        redirect_url = get_domain(request, SiteOwner).domain
-        current_site = get_current_site(request)
+        redirect_url = request.GET.get("redirect", "")
         valued = "?token_valid=False"
         try:
             id = smart_str(urlsafe_base64_decode(uidb64))
@@ -244,14 +243,10 @@ class PasswordTokenCheckAPI(GenericAPIView):
             if not default_token_generator.check_token(user, token):
                 if redirect_url and len(redirect_url) > 3:
                     return CustomRedirect(f"{redirect_url}{valued}")
-                else:
-                    return CustomRedirect(f"{current_site}{valued}")
             else:
                 valued = f"?token_valid=True&message=Credential_valid&uidb64={uidb64}&token={token}"
                 if redirect_url and len(redirect_url) > 3:
                     return CustomRedirect(f"{redirect_url}{valued}")
-                else:
-                    return CustomRedirect(f"{current_site}{valued}")
 
         except Exception as e:
             raise AuthenticationFailed("The reset link is invalid", 401)
@@ -316,10 +311,8 @@ class CustomRegisterView(RegisterView):
 
 
 class CustomVerifyEmailView(VerifyEmailView):
-    @check_domain(site_owner_model=SiteOwner)
     @swagger_auto_schema(
         auto_schema=None,
-        manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
@@ -339,13 +332,13 @@ class ConfirmEmailAPIView(GenericAPIView):
     def get(self, request, key, *args, **kwargs):
         verify_email = CustomInVerifyEmailView(request, **kwargs)
         path = reverse(viewname="user:rest_verify_email", current_app="user")
+        redirect_url = request.GET.get("redirect", "")
 
         request.path = path
         request.data["key"] = key
         request.method = "POST"
         response = verify_email.post(request, *args, **kwargs)
 
-        redirect_url = get_domain(request, SiteOwner).domain
         valued = "?valid_email=False"
 
         if response.status_code == 200:

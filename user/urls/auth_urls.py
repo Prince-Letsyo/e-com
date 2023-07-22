@@ -50,7 +50,7 @@ auth_urlpatterns = [
 
 if api_settings.USE_JWT:
     from user.views import CustomTokenVerifyView
-    from user.views.auth_views import CustomRefreshToken
+    from user.views.api_auth_views import CustomRefreshToken
 
     auth_urlpatterns += [
         path("token/verify/", CustomTokenVerifyView.as_view(), name="token_verify"),

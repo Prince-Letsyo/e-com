@@ -15,6 +15,7 @@ class SiteOwnerAdminForm(forms.ModelForm):
         model = SiteOwner
         fields = (
             "user",
+            "site",
             "public_key",
             "secret_key",
             "deleted_at",

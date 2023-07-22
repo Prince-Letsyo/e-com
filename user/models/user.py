@@ -1,3 +1,5 @@
+import random
+import string
 from django.contrib.sites.models import Site
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -98,9 +100,26 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStamps):
         return self.email
 
 
+def generate_random_string(length):
+    return "".join(
+        random.choices(
+            string.ascii_lowercase + string.ascii_uppercase + string.digits, k=length
+        )
+    )
+
+
 class SiteOwner(DeletedAt):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name="site_owner"
     )
+    site = models.OneToOneField(
+        Site, on_delete=models.CASCADE, related_name="owner_site"
+    )
     public_key = models.CharField(max_length=250, null=True, blank=True)
     secret_key = models.CharField(max_length=250, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.public_key and not self.secret_key:
+            self.public_key = generate_random_string(32)
+            self.secret_key = generate_random_string(64)
+        return super().save(*args, **kwargs)

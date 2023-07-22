@@ -6,7 +6,6 @@ from django.urls import reverse
 from dj_rest_auth.forms import build_absolute_uri
 from rest_framework.response import Response
 from rest_framework import status
-from user.api_key import decrypt_dict
 
 
 def fetch_data(filtered_func):
@@ -45,15 +44,10 @@ def check_domain(site_owner_model):
 
             if public_key and secret_key:
                 try:
-                    site_owner = site_owner_model.objects.get(
+                    site_owner_model.objects.get(
                         public_key=public_key, secret_key=secret_key
                     )
-                    decrypt_dict(
-                        password=site_owner.user.username,
-                        ct=public_key,
-                        salt=secret_key,
-                    )
-                    return view_func(request, *args, **kwargs)
+                    return view_func(self, request, *args, **kwargs)
                 except site_owner_model.DoesNotExist:
                     url = build_absolute_uri(
                         request,
@@ -66,11 +60,6 @@ def check_domain(site_owner_model):
                     response_data = {
                         "domain": f"Your domain does not on the server, Vist: {url} to add your domain."
                     }
-                except Exception:
-                    response_data = {
-                        "keys": "Invalid HTTP_PUBLIC_KEY or HTTP_SECRET_KEY"
-                    }
-                return Response(response_data, status=status.HTTP_403_FORBIDDEN)
             else:
                 response_data = {}
                 if public_key is None:

@@ -1,6 +1,4 @@
-from user.api_key import decrypt_dict
 from allauth.account.adapter import get_current_site
-from user.shortcuts import get_current_site as rest_get_current_site
 
 
 def filtered_cities(lst, country):
@@ -65,10 +63,23 @@ def get_domain(request, site_owner_model):
         site_owner = site_owner_model.objects.get(
             public_key=public_key, secret_key=secret_key
         )
-        data = decrypt_dict(
-            password=site_owner.user.username, ct=public_key, salt=secret_key
-        )
-
-        domain = data.get("domain", "")
-        return rest_get_current_site(request, domain)
+        return site_owner.site
     return get_current_site(request)
+
+
+# import validators
+
+# def is_valid_url(url):
+#     """
+#     Check if a given URL is valid.
+
+#     Args:
+#         url (str): The URL to check.
+
+#     Returns:
+#         bool: True if the URL is valid, False otherwise.
+#     """
+#     if validators.url(url):
+#         return True
+#     else:
+#         return False

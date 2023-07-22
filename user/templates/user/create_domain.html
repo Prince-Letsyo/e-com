@@ -5,7 +5,12 @@
 {% block content %}
 
 {% if perms.user.add_siteowner %}
-yes
+ <form action="" method="post">
+    {% csrf_token %}
+    {{form.as_p}}
+    <input type="submit" value="submit"/>
+</form> 
+
 {% else %}
 no
 {% endif %}
