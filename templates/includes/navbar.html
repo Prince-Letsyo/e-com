@@ -1,5 +1,20 @@
 {% load i18n %}
 
+<div>
+    <ul>
+        <li><a href="{% url 'user_profile:index' %}">Home</a></li>
+        {% if user.is_authenticated and perms.user.view_siteownerprofile %}
+            <li>
+                <a href="{% url 'user_profile:profile' %}">Profile</a>
+            </li>
+                <li>
+                    <a href="{% url 'schema-redoc' %}">Documentation</a>
+                </li>
+        {% endif %}
+    </ul>
+</div>
+
+
 {% if messages %}
     <div>
         <strong>{% trans "Messages:" %}</strong>

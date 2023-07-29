@@ -12,6 +12,7 @@ from helper import (
     Sex,
     TimeStamps,
 )
+from django.utils.translation import gettext_lazy as _
 from helper import DeletedAt
 
 
@@ -82,6 +83,13 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin, TimeStamps):
+    class Role(models.TextChoices):
+        ADMIN = "ADMIN", _("Admin")
+        SITEOWNER = "SITEOWNER", _("Site Owner")
+        SITEUSER = "SITEUSER", _("Site User")
+
+    base_role = Role.ADMIN
+
     username = models.CharField(max_length=150, unique=True, null=False, blank=False)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
@@ -90,6 +98,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStamps):
     email = models.EmailField(max_length=50, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    role = models.CharField(verbose_name="Role", max_length=50, choices=Role.choices)
 
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["first_name", "last_name", "email"]
@@ -98,6 +107,11 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStamps):
 
     def __str__(self):
         return self.email
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.role = self.base_role
+        return super().save(*args, **kwargs)
 
 
 def generate_random_string(length):
@@ -108,12 +122,29 @@ def generate_random_string(length):
     )
 
 
-class SiteOwner(DeletedAt):
+class SiteOwner(User):
+    base_role = User.Role.SITEOWNER
+
+    class Meta:
+        proxy = True
+
+
+class SiteUser(User):
+    base_role = User.Role.SITEUSER
+
+    class Meta:
+        proxy = True
+
+
+class SiteUserProfile(DeletedAt):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="site_user"
+    )
+
+
+class SiteOwnerProfile(DeletedAt):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name="site_owner"
-    )
-    site = models.OneToOneField(
-        Site, on_delete=models.CASCADE, related_name="owner_site"
     )
     public_key = models.CharField(max_length=250, null=True, blank=True)
     secret_key = models.CharField(max_length=250, null=True, blank=True)

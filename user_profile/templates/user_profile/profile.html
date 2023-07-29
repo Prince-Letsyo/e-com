@@ -1,0 +1,41 @@
+{% extends "user_profile/base_profile.html" %}
+{% load static %}
+
+{% block head_title %}{{request.user.username}} | Profile {% endblock %}
+
+{% block content %}
+    <div id="website_div">
+        {% if site %}
+            <div id="website_name">
+                <p>
+                    <span>Website: </span>{{site.name}}
+                </p>
+                <button id="edit_site">Edit</button>
+            </div>
+        {% else %}
+            <form id="create_site"  method="POST">
+                {% csrf_token %}
+                <label for="domain_name">Domain Name</label>
+                <input type="text" id="domain_name" placeholder="http://www.example.com"/>
+                <br/>
+                <br/>
+                <label for="display_name">Display Name</label>
+                <input type="text" id="display_name" placeholder="www.example.com"/>
+                <br/>
+                <br/>
+                <input type="submit" id="submit_site"/>
+            </form>
+        {% endif %}
+    </div>
+<p>
+    <span>Secret key: </span>{{site_owner_profile.secret_key}}
+</p>
+<p>
+    <span>Public key: </span>{{site_owner_profile.public_key}}
+</p>
+{% endblock %}
+
+    
+{% block extra_scripts %}
+<script src="{% static 'js/profile/create_site.js' %}"></script>
+{% endblock %}

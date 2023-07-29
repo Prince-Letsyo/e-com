@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django import forms
+from guardian.admin import GuardedModelAdmin
 from product.admin.cart_item import CartItemInline
 from product.admin.order_item import OrderItemInline
 from product.admin.review import ProductReviewInline
@@ -25,7 +26,7 @@ class ProductFormAdmin(forms.ModelForm):
         )
 
 
-class ProductAdmin(admin.ModelAdmin):
+class ProductAdmin(GuardedModelAdmin):
     inlines = [
         ProductReviewInline,
         CartItemInline,

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
+    "guardian",
     "user",
     "user_profile",
     "product",
@@ -127,6 +128,15 @@ USE_I18N = True
 USE_TZ = True
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",  # default
+    "guardian.backends.ObjectPermissionBackend",
+)
+
+LOGIN_URL = "/accounts/login/"
+
+LOGIN_REDIRECT_URL = "/accounts/profile/"
 
 AUTH_USER_MODEL = "user.User"
 REST_FRAMEWORK = {

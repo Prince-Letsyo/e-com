@@ -1,6 +1,5 @@
 from allauth.account.forms import SignupForm
 from django import forms
-from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 from helper.choices import Sex
 
@@ -36,12 +35,5 @@ class CustomSignupForm(SignupForm):
         data = request.POST
         user.gender = data["gender"]
         user.middle_name = data["middle_name"]
-        group, created = Group.objects.get_or_create(name="Site Owners")
-
-        if created:
-            pass
-
-        user.groups.add(group)
         user.save()
         return super().custom_signup(request, user)
-

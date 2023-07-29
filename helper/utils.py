@@ -1,4 +1,26 @@
+import json
+import validators
 from allauth.account.adapter import get_current_site
+from guardian.shortcuts import get_objects_for_user
+
+
+class OpenFile:
+    _instance = None
+    data = []
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, file, filter_by, filtered):
+        with open(file, "r", encoding="utf-8") as file:
+            json_data = json.load(file)
+            if filter_by is not None:
+                data = filtered(json_data, filter_by)
+            else:
+                data = json_data
+        OpenFile.data = data
 
 
 def filtered_cities(lst, country):
@@ -19,23 +41,23 @@ def filtered_cities(lst, country):
 
 
 def filtered_payment_provider(lst, type):
-    filtered_cities = []
+    filtered_provider = []
     if type != "all":
         for payment_provider in lst:
             if payment_provider["type"] == type:
-                filtered_cities.append(
+                filtered_provider.append(
                     {
                         "provider": payment_provider["provider"],
                         "name": payment_provider["name"],
                     }
                 )
-        filtered_cities = sorted(filtered_cities, key=lambda x: x["provider"])
-        filtered_cities.insert(0, {"provider": "", "name": ""})
+        filtered_provider = sorted(filtered_provider, key=lambda x: x["provider"])
+        filtered_provider.insert(0, {"provider": "", "name": ""})
     else:
-        filtered_cities = [
+        filtered_provider = [
             {"provider": item["provider"], "name": item["name"]} for item in lst
         ]
-    return filtered_cities
+    return filtered_provider
 
 
 def writable_nested_serializer(data, Modal, error, Serializer):
@@ -55,7 +77,7 @@ def writable_nested_serializer(data, Modal, error, Serializer):
         serializer.save()
 
 
-def get_domain(request, site_owner_model):
+def get_domain(request, site_owner_model, site):
     public_key = request.META.get("HTTP_PUBLIC_KEY")
     secret_key = request.META.get("HTTP_SECRET_KEY")
 
@@ -63,23 +85,13 @@ def get_domain(request, site_owner_model):
         site_owner = site_owner_model.objects.get(
             public_key=public_key, secret_key=secret_key
         )
-        return site_owner.site
+        if site_owner:
+            return get_objects_for_user(site_owner.user, ["view_site"], site).first()
     return get_current_site(request)
 
 
-# import validators
-
-# def is_valid_url(url):
-#     """
-#     Check if a given URL is valid.
-
-#     Args:
-#         url (str): The URL to check.
-
-#     Returns:
-#         bool: True if the URL is valid, False otherwise.
-#     """
-#     if validators.url(url):
-#         return True
-#     else:
-#         return False
+def is_valid_url(url):
+    if validators.url(url):
+        return True
+    else:
+        return False

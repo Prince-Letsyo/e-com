@@ -41,12 +41,12 @@ class StatusOrder(TextChoices):
     DELIVERY = "delivery", _("Delivery")
 
 
-@fetch_data("filtered_")
+@fetch_data()
 def read_data_from_file(file, filter_by, type, data=[]):
     return data
 
 
-@fetch_data("filtered_")
+@fetch_data()
 def make_choices_data(file, key, value, type, filter_by=None, data=[]):
     choices_data = [
         ("", "---------select---------")

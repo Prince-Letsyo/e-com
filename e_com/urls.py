@@ -4,7 +4,6 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
-from rest_framework import permissions
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from dj_rest_auth.jwt_auth import JWTCookieAuthentication
 from django.shortcuts import redirect
@@ -34,12 +33,8 @@ class CustomSwaggerView(schema_view):
         if not request.user.is_authenticated:
             return redirect("account_login")
 
-        if not request.user.is_authenticated:
-            return redirect("account_login")
-
-        for permission in self.get_permissions():
-            if not permission.has_permission(request, self):
-                return redirect("user_profile:index")
+        if request.user.role != "SITEOWNER" or request.user.role != "ADMIN":
+            return redirect("user_profile:index")
 
         return super(CustomSwaggerView, self).dispatch(request, *args, **kwargs)
 
@@ -68,5 +63,7 @@ urlpatterns = [
     path("product/", include("product.urls")),
 ]
 if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += [
+        *static(settings.STATIC_URL, document_root=settings.STATIC_ROOT),
+        *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
+    ]

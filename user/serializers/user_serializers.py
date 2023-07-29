@@ -4,7 +4,6 @@ from dj_rest_auth.serializers import (
     JWTSerializerWithExpiration,
     JWTSerializer,
 )
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from helper.utils import writable_nested_serializer
 from product.models.order_item import Order
@@ -12,15 +11,11 @@ from product.models.shopping_session import ShoppingSession
 from product.serializers.order_serializers import OrderSerializer
 from product.serializers.review_serializers import UserReviewSessionSerializer
 from product.serializers.shopping_session_serializers import ShoppingSessionSerializer
+
 from user.models.address import UserAddress
 from user.models.payment import UserPayment
-
-
 from user.serializers.address_serializers import UserAddressSerializer
 from user.serializers.payment_serializers import UserPaymentSerializer
-
-# Get the UserModel
-UserModel = get_user_model()
 
 
 class EmailAddressSerializer(serializers.ModelSerializer):
@@ -42,34 +37,26 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
     order = OrderSerializer(required=False)
 
     class Meta:
-        extra_fields = []
-        if hasattr(UserModel, "USERNAME_FIELD"):
-            extra_fields.append(UserModel.USERNAME_FIELD)
-        if hasattr(UserModel, "EMAIL_FIELD"):
-            extra_fields.append(UserModel.EMAIL_FIELD)
-        if hasattr(UserModel, "first_name"):
-            extra_fields.append("first_name")
-        if hasattr(UserModel, "last_name"):
-            extra_fields.append("last_name")
-        if hasattr(UserModel, "middle_name"):
+        model = UserDetailsSerializer.Meta.model
+        extra_fields = UserDetailsSerializer.Meta.extra_fields
+        if hasattr(model, "middle_name"):
             extra_fields.append("middle_name")
-        if hasattr(UserModel, "gender"):
+        if hasattr(model, "gender"):
             extra_fields.append("gender")
-        if hasattr(UserModel, "email"):
+        if hasattr(model, "email"):
             extra_fields.append("email")
-        if hasattr(UserModel, "useraddress"):
+        if hasattr(model, "useraddress"):
             extra_fields.append("useraddress")
-        if hasattr(UserModel, "userpayment_set"):
+        if hasattr(model, "userpayment_set"):
             extra_fields.append("userpayment_set")
-        if hasattr(UserModel, "shoppingsession"):
+        if hasattr(model, "shoppingsession"):
             extra_fields.append("shoppingsession")
-        if hasattr(UserModel, "userreviewsession_set"):
+        if hasattr(model, "userreviewsession_set"):
             extra_fields.append("userreviewsession_set")
-        if hasattr(UserModel, "emailaddress_set"):
+        if hasattr(model, "emailaddress_set"):
             extra_fields.append("emailaddress_set")
-        if hasattr(UserModel, "order"):
+        if hasattr(model, "order"):
             extra_fields.append("order")
-        model = UserModel
 
         fields = ("id", *extra_fields)
         read_only_fields = ("email",)

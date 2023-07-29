@@ -18,10 +18,7 @@ class IsVerified(BasePermission):
 
 class IsVerifiedSiteOwner(IsVerified):
     def has_permission(self, request, view):
-        has_site = False
-        user = request.user
-        site_owners = user.groups.filter(name="Site Owners")
-        if site_owners.exists():
-            has_site = True
-
-        return bool(has_site and super().has_permission(request, view))
+        return bool(
+            (request.user.role == "SITEOWNER" or request.user.role == "ADMIN")
+            and super().has_permission(request, view)
+        )

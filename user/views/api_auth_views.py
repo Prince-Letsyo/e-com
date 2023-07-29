@@ -1,9 +1,10 @@
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django.contrib.sites.shortcuts import get_current_site
+from django.db import transaction
 from django.conf import settings
 from dj_rest_auth.views import api_settings
 from django.utils.encoding import smart_str
+from allauth.account.utils import url_str_to_user_pk
 from django.utils.http import urlsafe_base64_decode
 from dj_rest_auth.views import (
     LoginView,
@@ -25,22 +26,16 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
-from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.views import TokenVerifyView
 from helper import CustomRedirect
 from helper.decorators import check_domain
 from helper.permissions import IsVerified
-from user.serializers.user_serializers import (
+from user.serializers import (
     LogInResponseWithExpirationSerializer,
     LogInResponseWithoutExpirationSerializer,
-)
-
-from user.serializers import (
     PasswordTokenSerializer,
 )
-from user.models import User, SiteOwner
-from helper.utils import get_domain
-
+from user.models import User, SiteOwnerProfile
 
 site_keys = [
     openapi.Parameter(
@@ -69,6 +64,7 @@ class CustomLoginView(LoginView):
     Return the REST Framework Token Object's key.
     """
 
+    @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         responses={
             200: LogInResponseWithExpirationSerializer
@@ -121,6 +117,7 @@ class CustomLogoutView(LogoutView):
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
+    @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         request_body=log_out_request,
         responses={200: log_out_response},
@@ -149,6 +146,7 @@ class CustomPasswordChangeView(PasswordChangeView):
     Returns the success/fail message.
     """
 
+    @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         responses={200: password_change_response},
         manual_parameters=site_keys,
@@ -176,11 +174,12 @@ class CustomPasswordResetView(PasswordResetView):
     Returns the success/fail message.
     """
 
-    @check_domain(site_owner_model=SiteOwner)
+    @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         responses={200: password_reset_response},
         manual_parameters=site_keys,
     )
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -232,8 +231,9 @@ class PasswordTokenCheckAPI(GenericAPIView):
     def get(self, request, uidb64, token):
         redirect_url = request.GET.get("redirect", "")
         valued = "?token_valid=False"
+
         try:
-            id = smart_str(urlsafe_base64_decode(uidb64))
+            id = url_str_to_user_pk(smart_str(urlsafe_base64_decode(uidb64)))
             user = User.objects.get(id=id)
             if "allauth" in settings.INSTALLED_APPS:
                 from allauth.account.forms import default_token_generator
@@ -241,21 +241,21 @@ class PasswordTokenCheckAPI(GenericAPIView):
                 from django.contrib.auth.tokens import default_token_generator
 
             if not default_token_generator.check_token(user, token):
-                if redirect_url and len(redirect_url) > 3:
-                    return CustomRedirect(f"{redirect_url}{valued}")
+                return CustomRedirect(f"{redirect_url}{valued}")
             else:
                 valued = f"?token_valid=True&message=Credential_valid&uidb64={uidb64}&token={token}"
-                if redirect_url and len(redirect_url) > 3:
-                    return CustomRedirect(f"{redirect_url}{valued}")
-
+                return CustomRedirect(f"{redirect_url}{valued}")
         except Exception as e:
-            raise AuthenticationFailed("The reset link is invalid", 401)
+            return CustomRedirect(f"{redirect_url}{valued}")
 
+    @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         manual_parameters=site_keys,
     )
     def post(self, request, uidb64, token):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(
+            data={**request.data, "uidb64": uidb64, "token": token}
+        )
         serializer.is_valid(raise_exception=True)
 
         return Response(
@@ -281,18 +281,21 @@ class CustomUserDetailsView(UserDetailsView):
     Returns UserModel fields.
     """
 
+    @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
+    @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         manual_parameters=site_keys,
     )
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
 
+    @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         manual_parameters=site_keys,
     )
@@ -301,11 +304,12 @@ class CustomUserDetailsView(UserDetailsView):
 
 
 class CustomRegisterView(RegisterView):
-    @check_domain(site_owner_model=SiteOwner)
+    @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         manual_parameters=site_keys,
         responses={201: LogInResponseWithoutExpirationSerializer},
     )
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -358,7 +362,7 @@ verify_email_resend = openapi.Schema(
 
 
 class CustomResendEmailVerificationView(ResendEmailVerificationView):
-    @check_domain(site_owner_model=SiteOwner)
+    @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         responses={200: verify_email_resend},
         manual_parameters=site_keys,
@@ -377,6 +381,7 @@ verify_token = openapi.Schema(
 
 
 class CustomTokenVerifyView(TokenVerifyView):
+    @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         responses={200: verify_token},
         manual_parameters=site_keys,
@@ -409,6 +414,7 @@ refresh_token = openapi.Schema(
 
 
 class CustomRefreshToken(get_refresh_view()):
+    @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         responses={200: refresh_token},
         manual_parameters=site_keys,

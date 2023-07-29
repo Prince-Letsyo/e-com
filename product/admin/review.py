@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django import forms
+from guardian.admin import GuardedModelAdmin
 from product.models.review import *
 
 
@@ -13,7 +14,7 @@ class ProductReviewAdminForm(forms.ModelForm):
         )
 
 
-class ProductReviewAdmin(admin.ModelAdmin):
+class ProductReviewAdmin(GuardedModelAdmin):
     form = ProductReviewAdminForm
     model = ProductReview
 
