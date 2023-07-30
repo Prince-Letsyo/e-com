@@ -1,3 +1,5 @@
-from django.test import TestCase
+from user.tests import TestUserTest
 
-# Create your tests here.
+
+class TestProduct(TestUserTest):
+    pass

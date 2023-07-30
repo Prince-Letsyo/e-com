@@ -42,6 +42,29 @@ site_keys = [
     ),
 ]
 
+non_exist_domain = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    title="Domain",
+    properties={
+        "domain": openapi.Schema(
+            type=openapi.TYPE_STRING, default="Your domain does not exist."
+        ),
+    },
+)
+
+api_keys = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    title="Api-keys",
+    properties={
+        "Public-key": openapi.Schema(
+            type=openapi.TYPE_STRING, default="Public-key is required."
+        ),
+        "Secret-key": openapi.Schema(
+            type=openapi.TYPE_STRING, default="Secret-key is required."
+        ),
+    },
+)
+
 
 class ProductListCreateAPIView(ListCreateAPIView):
     serializer_class = ProductSerializer
@@ -49,12 +72,14 @@ class ProductListCreateAPIView(ListCreateAPIView):
     permission_classes = (IsVerified,)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
@@ -68,18 +93,21 @@ class ProductRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     lookup_field = "id"
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def patch(self, request, *args, **kwargs):
@@ -92,12 +120,14 @@ class ProductInventoryListCreateAPIView(ListCreateAPIView):
     queryset = ProductInventory.objects.all()
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
@@ -111,18 +141,21 @@ class ProductInventoryRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     lookup_field = "id"
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def patch(self, request, *args, **kwargs):
@@ -136,12 +169,14 @@ class ProductCategoryListCreateAPIView(ListCreateAPIView):
     permission_classes = (IsVerified,)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
@@ -156,18 +191,21 @@ class ProductCategoryRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     lookup_field = "id"
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def patch(self, request, *args, **kwargs):
@@ -180,12 +218,14 @@ class ProductDiscountListCreateAPIView(ListCreateAPIView):
     permission_classes = (IsVerified,)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
@@ -199,18 +239,21 @@ class ProductDiscountRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     lookup_field = "id"
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def patch(self, request, *args, **kwargs):
@@ -223,12 +266,14 @@ class PromotionListCreateAPIView(ListCreateAPIView):
     queryset = Promotion.objects.all()
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
@@ -242,24 +287,28 @@ class PromotionRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     lookup_field = "id"
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def delete(self, request, *args, **kwargs):
@@ -273,12 +322,14 @@ class ProductAdListCreateAPIView(ListCreateAPIView):
     queryset = ProductAd.objects.all()
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
@@ -293,24 +344,28 @@ class ProductAdRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     lookup_field = "id"
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def delete(self, request, *args, **kwargs):

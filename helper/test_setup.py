@@ -6,11 +6,11 @@ from rest_framework.test import APITestCase
 
 class APITestSetUp(APITestCase):
     def setUp(self):
+        self.headers = {}
         self.public_key = ""
         self.secret_key = ""
         self.csrftoken = ""
         self.site = {"domain": "http://www.go.com", "name": "www.go.com"}
-        self.site_ = '{"domain": "http://www.go.com", "name": "www.go.com"}'
         self.register_url_siteowner = reverse("account_signup")
         self.log_in_url_siteownwer = reverse("account_login")
         self.create_domain = reverse("user:create_domain", current_app="user")

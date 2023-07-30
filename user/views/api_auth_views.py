@@ -51,6 +51,28 @@ site_keys = [
         required=True,
     ),
 ]
+non_exist_domain = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    title="Domain",
+    properties={
+        "domain": openapi.Schema(
+            type=openapi.TYPE_STRING, default="Your domain does not exist."
+        ),
+    },
+)
+
+api_keys = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    title="Api-keys",
+    properties={
+        "Public-key": openapi.Schema(
+            type=openapi.TYPE_STRING, default="Public-key is required."
+        ),
+        "Secret-key": openapi.Schema(
+            type=openapi.TYPE_STRING, default="Secret-key is required."
+        ),
+    },
+)
 
 
 class CustomLoginView(LoginView):
@@ -91,7 +113,7 @@ log_out_request = openapi.Schema(
 
 log_out_response = openapi.Schema(
     type=openapi.TYPE_OBJECT,
-    title="CustomLogout",
+    title="Logout",
     properties={
         "detail": openapi.Schema(
             type=openapi.TYPE_STRING, default="Successfully logged out."
@@ -120,7 +142,7 @@ class CustomLogoutView(LogoutView):
     @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         request_body=log_out_request,
-        responses={200: log_out_response},
+        responses={200: log_out_response, 401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
@@ -148,7 +170,7 @@ class CustomPasswordChangeView(PasswordChangeView):
 
     @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
-        responses={200: password_change_response},
+        responses={200: password_change_response, 401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
@@ -176,7 +198,7 @@ class CustomPasswordResetView(PasswordResetView):
 
     @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
-        responses={200: password_reset_response},
+        responses={200: password_reset_response, 401: non_exist_domain},
         manual_parameters=site_keys,
     )
     @transaction.atomic
@@ -215,14 +237,18 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     """
 
     @swagger_auto_schema(
-        responses={200: password_reset_confirm_response},
+        responses={
+            200: password_reset_confirm_response,
+            401: non_exist_domain,
+            403: api_keys,
+        },
         manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
 
-class PasswordTokenCheckAPI(GenericAPIView):
+class PasswordTokenCheckViaLinkAPIView(GenericAPIView):
     serializer_class = PasswordTokenSerializer
 
     @swagger_auto_schema(
@@ -248,14 +274,17 @@ class PasswordTokenCheckAPI(GenericAPIView):
         except Exception as e:
             return CustomRedirect(f"{redirect_url}{valued}")
 
+
+class PasswordTokenCheckAPIView(GenericAPIView):
+    serializer_class = PasswordTokenSerializer
+
     @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
-    def post(self, request, uidb64, token):
-        serializer = self.serializer_class(
-            data={**request.data, "uidb64": uidb64, "token": token}
-        )
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         return Response(
@@ -283,6 +312,7 @@ class CustomUserDetailsView(UserDetailsView):
 
     @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def get(self, request, *args, **kwargs):
@@ -290,6 +320,7 @@ class CustomUserDetailsView(UserDetailsView):
 
     @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def patch(self, request, *args, **kwargs):
@@ -297,6 +328,7 @@ class CustomUserDetailsView(UserDetailsView):
 
     @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def put(self, request, *args, **kwargs):
@@ -307,7 +339,11 @@ class CustomRegisterView(RegisterView):
     @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
         manual_parameters=site_keys,
-        responses={201: LogInResponseWithoutExpirationSerializer},
+        responses={
+            201: LogInResponseWithoutExpirationSerializer,
+            401: non_exist_domain,
+            403: api_keys,
+        },
     )
     @transaction.atomic
     def post(self, request, *args, **kwargs):
@@ -364,7 +400,7 @@ verify_email_resend = openapi.Schema(
 class CustomResendEmailVerificationView(ResendEmailVerificationView):
     @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
-        responses={200: verify_email_resend},
+        responses={200: verify_email_resend, 401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
@@ -383,7 +419,7 @@ verify_token = openapi.Schema(
 class CustomTokenVerifyView(TokenVerifyView):
     @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
-        responses={200: verify_token},
+        responses={200: verify_token, 401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):
@@ -416,7 +452,7 @@ refresh_token = openapi.Schema(
 class CustomRefreshToken(get_refresh_view()):
     @check_domain(site_owner_model=SiteOwnerProfile)
     @swagger_auto_schema(
-        responses={200: refresh_token},
+        responses={200: refresh_token, 401: non_exist_domain, 403: api_keys},
         manual_parameters=site_keys,
     )
     def post(self, request, *args, **kwargs):

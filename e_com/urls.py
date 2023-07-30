@@ -33,7 +33,7 @@ class CustomSwaggerView(schema_view):
         if not request.user.is_authenticated:
             return redirect("account_login")
 
-        if request.user.role != "SITEOWNER" or request.user.role != "ADMIN":
+        if request.user.role != "SITEOWNER" and request.user.role != "ADMIN":
             return redirect("user_profile:index")
 
         return super(CustomSwaggerView, self).dispatch(request, *args, **kwargs)

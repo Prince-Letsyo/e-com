@@ -1,5 +1,4 @@
 import json
-import pprint
 from django.conf import settings
 from django.db.models import Q
 from django.urls import reverse
@@ -7,7 +6,7 @@ from rest_framework import status
 from helper.test_setup import APITestSetUp
 from django.contrib.sites.models import Site
 from guardian.shortcuts import get_objects_for_user
-from user.models import User, SiteOwnerProfile
+from user.models import User, SiteOwnerProfile, SiteUserProfile
 from django.utils.encoding import smart_bytes
 from django.utils.http import urlsafe_base64_encode
 from allauth.account.models import EmailAddress
@@ -20,10 +19,21 @@ if "allauth" in settings.INSTALLED_APPS:
     )
 
 
-# Create your tests here.
 class TestUserTest(APITestSetUp):
     def sign_up_siteoewner(self):
         pass
+
+    @property
+    def siteowner_profile_object(self):
+        return SiteOwnerProfile.objects.get(user=self.siteowner_object)
+
+    @property
+    def user_profile_object(self):
+        return SiteUserProfile.objects.get(user=self.user_object)
+
+    @property
+    def user_object(self):
+        return User.objects.get(username=self.register_credentials["username"])
 
     @property
     def siteowner_object(self):
@@ -42,6 +52,13 @@ class TestUserTest(APITestSetUp):
         person_email.verified = True
         person_email.save()
         self.csrftoken = res.cookies["csrftoken"].value
+        self.public_key = self.siteowner_profile_object.public_key
+        self.secret_key = self.siteowner_profile_object.secret_key
+        self.headers = {
+            "Public-key": self.public_key,
+            "Secret-key": self.secret_key,
+            "x-csrftoken": self.secret_key,
+        }
         self.assertEqual(person.role, "SITEOWNER")
         self.assertEqual(
             res.url, reverse("user_profile:profile", current_app="user_profile")
@@ -53,6 +70,7 @@ class TestUserTest(APITestSetUp):
 
     def generate_password_reset_link(self):
         self.test_siteowner_has_profile()
+
         user = self.siteowner_object
         temp_key = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(smart_bytes(user_pk_to_url_str(user)))
@@ -61,15 +79,9 @@ class TestUserTest(APITestSetUp):
     def test_siteowner_can_reset_via_json(self):
         uid, temp_key = self.generate_password_reset_link()
         res = self.client.post(
-            reverse(
-                "user:password_reset_confirm", args=[uid, temp_key], current_app="user"
-            ),
+            reverse("user:password_reset_confirm_no_link", current_app="user"),
             {"uidb64": uid, "token": temp_key},
-            headers={
-                "Public-key": self.public_key,
-                "Secret-key": self.secret_key,
-                "x-csrftoken": self.secret_key,
-            },
+            headers=self.headers,
         )
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
@@ -85,10 +97,7 @@ class TestUserTest(APITestSetUp):
     def test_siteowner_has_profile(self):
         self.test_signup_siteowner()
         person = self.siteowner_object
-        site_owner = SiteOwnerProfile.objects.get(user=person)
-        self.assertEqual(person, site_owner.user)
-        self.public_key = site_owner.public_key
-        self.secret_key = site_owner.secret_key
+        self.assertEqual(person, self.siteowner_profile_object.user)
 
     def test_siteowner_can_login(self):
         self.test_siteowner_has_profile()
@@ -126,29 +135,23 @@ class TestUserTest(APITestSetUp):
 
     def test_user_can_register(self):
         self.test_siteowner_has_site()
-        headers = {
-            "Public-key": self.public_key,
-            "Secret-key": self.secret_key,
-            "x-csrftoken": self.secret_key,
-        }
         res = self.client.post(
-            self.register_url, self.register_credentials, headers=headers
+            self.register_url, self.register_credentials, headers=self.headers
         )
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
     def test_user_can_login(self):
         self.test_user_can_register()
-        headers = {
-            "Public-key": self.public_key,
-            "Secret-key": self.secret_key,
-            "x-csrftoken": self.secret_key,
-        }
         res = self.client.post(
             self.log_in_url,
             {
                 "username": self.register_credentials["username"],
                 "password": self.register_credentials["password1"],
             },
-            headers=headers,
+            headers=self.headers,
         )
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_siteuser_has_profile(self):
+        self.test_user_can_register()
+        self.assertEqual(self.user_object, self.user_profile_object.user)

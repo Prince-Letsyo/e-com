@@ -39,13 +39,13 @@ def check_domain(site_owner_model):
                     return view_func(self, request, *args, **kwargs)
                 except site_owner_model.DoesNotExist:
                     response_data = {"domain": f"Your domain does not exist."}
-
+                    return Response(response_data, status=status.HTTP_404_NOT_FOUND)
             else:
                 response_data = {}
                 if public_key is None:
-                    response_data["HTTP_PUBLIC_KEY"] = "HTTP_PUBLIC_KEY is required"
+                    response_data["Public-key"] = "Public-key is required"
                 if secret_key is None:
-                    response_data["HTTP_SECRET_KEY"] = "HTTP_SECRET_KEY is required"
+                    response_data["Secret-key"] = "Secret-key is required"
             return Response(response_data, status=status.HTTP_401_UNAUTHORIZED)
 
         return wrapper

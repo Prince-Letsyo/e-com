@@ -6,7 +6,8 @@ from user.views import (
     CustomPasswordChangeView,
     CustomPasswordResetView,
     CustomPasswordResetConfirmView,
-    PasswordTokenCheckAPI,
+    PasswordTokenCheckAPIView,
+    PasswordTokenCheckViaLinkAPIView,
     CustomUserDetailsView,
     CustomRegisterView,
     CustomVerifyEmailView,
@@ -31,8 +32,13 @@ auth_urlpatterns = [
     ),
     path("registration/", CustomRegisterView.as_view(), name="rest_register"),
     path(
+        "password-reset/",
+        PasswordTokenCheckAPIView.as_view(),
+        name="password_reset_confirm_no_link",
+    ),
+    path(
         "password-reset/<uidb64>/<token>/",
-        PasswordTokenCheckAPI.as_view(),
+        PasswordTokenCheckViaLinkAPIView.as_view(),
         name="password_reset_confirm",
     ),
     path(
