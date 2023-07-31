@@ -57,6 +57,7 @@ urlpatterns = [
         CustomSwaggerView.with_ui("redoc", cache_timeout=0),
         name="schema-redoc",
     ),
+    # path("account/", include("two_factor.urls")),
     path("accounts/", include("allauth.account.urls")),
     path("admin/", admin.site.urls),
     path("auth/", include("user.urls")),

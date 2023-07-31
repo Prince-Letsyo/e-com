@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    
+    # third party app
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -50,17 +52,24 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "guardian",
+    # "django_otp",
+    # "django_otp.plugins.otp_totp",
+    # "django_otp.plugins.otp_hotp",
+    # "django_otp.plugins.otp_email",
+    
+    # loacl app
     "user",
     "user_profile",
     "product",
 ]
-
+ 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # "django_otp.middleware.OTPMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -179,7 +188,9 @@ SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "username"
 ACCOUNT_ADAPTER = "user.adapter.CustomDefaultAccountAdapter"
-ACCOUNT_FORMS = {"signup": "user.forms.CustomSignupForm"}
+ACCOUNT_FORMS = {
+    "signup": "user.forms.web_forms.CustomSignupForm",
+                 }
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
