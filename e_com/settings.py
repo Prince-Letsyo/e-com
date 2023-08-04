@@ -14,6 +14,8 @@ import os
 from pathlib import Path
 from datetime import timedelta
 
+from django.urls import reverse_lazy
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -40,7 +42,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    
     # third party app
     "allauth",
     "allauth.account",
@@ -52,24 +53,23 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "guardian",
-    # "django_otp",
-    # "django_otp.plugins.otp_totp",
-    # "django_otp.plugins.otp_hotp",
-    # "django_otp.plugins.otp_email",
-    
-    # loacl app
+    "django_otp",
+    "django_otp.plugins.otp_static",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_hotp",
+    "django_otp.plugins.otp_email",
     "user",
     "user_profile",
     "product",
 ]
- 
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    # "django_otp.middleware.OTPMiddleware",
+    "django_otp.middleware.OTPMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -143,9 +143,9 @@ AUTHENTICATION_BACKENDS = (
     "guardian.backends.ObjectPermissionBackend",
 )
 
-LOGIN_URL = "/accounts/login/"
+LOGIN_URL = reverse_lazy("account_login")
 
-LOGIN_REDIRECT_URL = "/accounts/profile/"
+LOGIN_REDIRECT_URL = reverse_lazy("user_profile:profile")
 
 AUTH_USER_MODEL = "user.User"
 REST_FRAMEWORK = {
@@ -190,17 +190,20 @@ ACCOUNT_AUTHENTICATION_METHOD = "username"
 ACCOUNT_ADAPTER = "user.adapter.CustomDefaultAccountAdapter"
 ACCOUNT_FORMS = {
     "signup": "user.forms.web_forms.CustomSignupForm",
-                 }
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR,"static")
+    ]
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+STATIC_ROOT = os.path.join(BASE_DIR, "/static/")
 STATIC_URL = "/static/"
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "/media/")
 MEDIA_URL = "/media/"
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

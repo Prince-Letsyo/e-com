@@ -1,15 +1,22 @@
-from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.shortcuts import redirect
+from django.http import HttpResponse
+from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp.plugins.otp_hotp.models import HOTPDevice
 
 
-class SiteOwnerProfilePermissionRequiredMixin(PermissionRequiredMixin):
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.role == "SITEOWNER":
-            return redirect("user_profile:index")
+def qrcode_view(request, device_type, pk):
+    if device_type == "time_based":
+        device = TOTPDevice.objects.get(pk=pk)
+    else:
+        device = HOTPDevice.objects.get(pk=pk)
 
-        if not self.has_permission():
-            return redirect("user_profile:index")
+    try:
+        import qrcode
+        import qrcode.image.svg
 
-        return super(SiteOwnerProfilePermissionRequiredMixin, self).dispatch(
-            request, *args, **kwargs
-        )
+        img = qrcode.make(device.config_url, image_factory=qrcode.image.svg.SvgImage)
+        response = HttpResponse(content_type="image/svg+xml")
+        img.save(response)
+    except ImportError:
+        response = HttpResponse("", status=503)
+
+    return response

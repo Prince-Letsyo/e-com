@@ -35,7 +35,7 @@ class UserAddressAdmin(admin.ModelAdmin):
     search_fields = ["city"]
 
     class Media:
-        js = ("js/admin/user/user_address_admin.js",)
+        js = ("js/admin/user_address_admin.js",)
 
 
 admin.site.register(UserAddress, UserAddressAdmin)

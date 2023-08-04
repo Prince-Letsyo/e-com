@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+
+{% block head_title %}
+    {% if user.totpdevice_set.all.count >= 1 or user.hotpdevice_set.all.count >= 1%}
+        {{request.user.username}} | Check token 
+    {% else %}
+        {{request.user.username}} | Token device 
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if user.totpdevice_set.all.count >= 1 or user.hotpdevice_set.all.count >= 1%}
+        <form action="" method="post">
+            {% csrf_token %}
+            {{form.as_p}}
+            <input type="submit" value="submit"/>
+        </form> 
+        {% else %}
+        
+        <div id="token_device">
+            <form  method="post">
+                {% csrf_token %}
+                <label for="device_name">Device Name</label>
+                <input type="text" id="device_name" placeholder="eg. {{request.user.username}}-device"/>
+                <br/>
+                <br/>
+                <label for="type_of_key">Type of key</label>
+                <select id="type_of_key">
+                    <option value="time_based">Time based</option>
+                    <option value="counter_based">Counter based</option>
+                </select>
+                <br/>
+                <br/>
+                <input type="submit" id="token_device_btn" value="submit"/>
+            </form> 
+        </div>
+        {% endif %}
+    {% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/user/user_token_device.js' %}"></script>
+{% endblock %}

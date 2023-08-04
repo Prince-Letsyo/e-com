@@ -2,6 +2,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django_otp.admin import OTPAdminSite
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -39,6 +40,11 @@ class CustomSwaggerView(schema_view):
         return super(CustomSwaggerView, self).dispatch(request, *args, **kwargs)
 
 
+otp_admin_site = OTPAdminSite(OTPAdminSite.name)
+for model_cls, model_admin in admin.site._registry.items():
+    otp_admin_site.register(model_cls, model_admin.__class__)
+
+
 urlpatterns = [
     path(
         "",
@@ -57,9 +63,9 @@ urlpatterns = [
         CustomSwaggerView.with_ui("redoc", cache_timeout=0),
         name="schema-redoc",
     ),
-    # path("account/", include("two_factor.urls")),
     path("accounts/", include("allauth.account.urls")),
-    path("admin/", admin.site.urls),
+    # path("admin/", admin.site.urls),
+    path("otpadmin/", otp_admin_site.urls),
     path("auth/", include("user.urls")),
     path("product/", include("product.urls")),
 ]

@@ -4,6 +4,15 @@
 {% block head_title %}{{request.user.username}} | Profile {% endblock %}
 
 {% block content %}
+{% if request.user.otp_device %}
+        {% if user.staticdevice_set.exists%}
+                {% if user.staticdevice_set.first.token_set.all.count <= 3%}
+                    <div id="user_backup_code_div">
+                        <button id="backup_generate">Generate backup codes</button>
+                    </div>                    
+                {% endif %}
+            {% endif %}
+{% endif %}
     <div id="website_div">
         {% if site %}
             <div id="website_name">

@@ -1,7 +1,9 @@
+import {} from "./types"
+
 const countryDB = {
   _prevCity: '',
   _previousNationality: '',
-  setCity: (prevCity, previousNationality) => {
+  setCity: (prevCity: string, previousNationality:string) => {
     if (
       prevCity !== countryDB._prevCity &&
       prevCity !== '' &&
@@ -14,12 +16,12 @@ const countryDB = {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  var nationality = document.querySelector('.user_address_country')
-  var city = document.querySelector('.user_address_city')
-  countryDB.setCity(city.value, nationality.value)
+  var nationality:HTMLInputElement | null = document.querySelector('.user_address_country')
+  var city:HTMLInputElement | null = document.querySelector('.user_address_city')
+  countryDB.setCity(city?.value as string, nationality?.value as string)
 
   // Replace with the actual dependent field ID
-  function appendSelectChild(text, value) {
+  function appendSelectChild(text:string, value:string) {
     var option = document.createElement('option')
     option.text = text
     option.value = value
@@ -28,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Function to update the dependent field options based on the selected category
   function updateDependentFieldOptions() {
-    var selectedNationality = nationality.value
+    var selectedNationality:string = nationality!.value
 
     if (selectedNationality) {
       fetch('/auth/user/cities/?country_code=' + selectedNationality)
@@ -40,37 +42,37 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         })
         .then(function (data) {
-          city.innerHTML = ''
+          city!.innerHTML = ''
           for (var key in data) {
             if (data.hasOwnProperty(key)) {
-              city.appendChild(appendSelectChild(data[key], key))
+              city!.appendChild(appendSelectChild(data[key], key))
             }
           }
-          city.disabled = false
+          city!.disabled = false
           if (countryDB._previousNationality === selectedNationality)
-            city.value = countryDB._prevCity
+            city!.value = countryDB._prevCity
           else {
-            city.value = ''
+            city!.value = ''
           }
         })
         .catch(function (error) {
-          if (!city.value) {
-            city.innerHTML = ''
-            city.appendChild(
+          if (!city?.value) {
+            city!.innerHTML = ''
+            city!.appendChild(
               appendSelectChild('---------select a nationality---------', ''),
             )
-            city.disabled = true
+            city!.disabled = true
           }
           selectedNationality == ''
-            ? (nationality.value = '')
-            : (nationality.value = selectedNationality)
+            ? (nationality!.value = '')
+            : (nationality!.value = selectedNationality)
         })
     } else {
-      city.innerHTML = ''
-      city.appendChild(
+      city!.innerHTML = ''
+      city!.appendChild(
         appendSelectChild('---------select a nationality---------', ''),
       )
-      city.disabled = true
+      city!.disabled = true
     }
   }
   if (nationality) {
