@@ -54,7 +54,7 @@ def update_site_view(request, *args, **kwargs):
         site = form.save()
         return JsonResponse(form.data, status=200)
     status = form.errors.get_json_data()["domain"][0]["code"]
-    return JsonResponse(form.errors, status=status)
+    return JsonResponse(form.errors, status=400)
 
 
 def create_device(device_model, user, data, key_type):

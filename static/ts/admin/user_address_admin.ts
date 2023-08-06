@@ -1,4 +1,3 @@
-import {} from "./types"
 
 const countryDB = {
   _prevCity: '',
