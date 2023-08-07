@@ -5,7 +5,7 @@ from user.views.json_web_views import (
     get_site_view,
     update_site_view,
     json_token_check_view,
-    create_backup_token_code_view,
+    create_backup_token_code_view,get_user_backup_codes
 )
 from user.views.web_views import qrcode_view
 
@@ -19,6 +19,11 @@ web_urlpatterns = [
         "token_setup/backup_code/",
         create_backup_token_code_view,
         name="create_backup_token_code",
+    ),
+    path(
+        "user_backup_code/",
+        get_user_backup_codes,
+        name="get_user_backup_codes",
     ),
     path("token_setup/qrcode/<int:pk>/<str:device_type>/", qrcode_view, name="qrcode"),
 ]

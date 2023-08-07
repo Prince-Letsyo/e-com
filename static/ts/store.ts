@@ -1,30 +1,33 @@
 import { MainStore, StateChangeFN } from "./types";
 
-const initialStore: MainStore = {
+let initialStore: MainStore = {
   siteData: {
-    type: "",
     site: {
       domain: "",
       name: "",
     },
   },
   deviceLinkData: {
-    type: "",
     device: {
       otp_device: "",
       link: "",
     },
     dataBackup: {
-      codes: []
-    }
+      codes: [],
+    },
   },
 };
 
 export default class Store extends EventTarget {
-  private state: MainStore;
   constructor() {
     super();
-    this.state = initialStore;
+    // setTimeout(() => {
+    //   console.log("Up");
+    // }, 1000);
+
+    // setInterval(() => {
+    //   console.log("Down");
+    // }, 1000);
   }
 
   get store(): MainStore {
@@ -32,7 +35,7 @@ export default class Store extends EventTarget {
   }
 
   protected getState(): MainStore {
-    return this.state;
+    return initialStore;
   }
 
   protected saveState(stateOrCb: MainStore | StateChangeFN) {
@@ -48,7 +51,6 @@ export default class Store extends EventTarget {
       default:
         throw new Error("Invalid arguement passed to saveState");
     }
-    this.state = newState;
-    this.dispatchEvent(new Event("statechange"));
+    initialStore = newState;
   }
 }

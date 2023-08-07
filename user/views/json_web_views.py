@@ -122,3 +122,15 @@ def create_backup_token_code_view(request, *args, **kwargs):
 
         return JsonResponse({"codes": static_token_list}, status=200)
     return JsonResponse({"device": "Device does not exist."}, status=400)
+
+def get_user_backup_codes(request, *args, **kwargs):
+    static_devices = StaticDevice.objects.filter(user=request.user)
+
+    if static_devices.exists():
+        static_device = static_devices.first()
+        static_token_list = [
+            static_token.token for static_token in static_device.token_set.all()
+        ]
+
+        return JsonResponse({"codes": static_token_list}, status=200)
+    return JsonResponse({"device": "Device does not exist."}, status=400)

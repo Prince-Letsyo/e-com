@@ -22,12 +22,10 @@ export type ResponseError = {
 
 export type MainStore = {
   deviceLinkData: {
-    type: string;
     device: DeviceLink;
     dataBackup:DataBackup
   };
   siteData: {
-    type: string;
     site: DataSite;
   };
 

@@ -1,5 +1,5 @@
 import Store from "../store.js";
-import { DataBackup, DataSuccess, DeviceLink } from "../types.js";
+import { DataBackup, DataSuccess, DeviceLink, MainStore } from "../types.js";
 import { headers } from "../utils.js";
 
 export default class TokenDeviceStore extends Store {
@@ -13,8 +13,10 @@ export default class TokenDeviceStore extends Store {
         data.json().then((dataBackUp: DataBackup) => {
           const cloneState = structuredClone(this.getState());
           cloneState.deviceLinkData.dataBackup = dataBackUp;
-          cloneState.deviceLinkData.type = "generate_backup_code";
-          this.saveState(cloneState);
+          this.saveState((prevState: MainStore) => {
+            return {...prevState, ...cloneState};
+          });
+          this.dispatchEvent(new Event("token_generate_backup_code"));
         });
       } else {
         data.json().then((e) => console.log(e));
@@ -39,9 +41,10 @@ export default class TokenDeviceStore extends Store {
       if (data.ok) {
         data.json().then((dataSuccess: DataSuccess) => {
           if (dataSuccess.success) {
-            const cloneState = structuredClone(this.getState());
-            cloneState.deviceLinkData.type = "process_token_code";
-            this.saveState(cloneState);
+            this.saveState((prevState: MainStore) => {
+              return prevState;
+            });
+            this.dispatchEvent(new Event("token_process_token_code"));
           }
         });
       } else {
@@ -57,10 +60,11 @@ export default class TokenDeviceStore extends Store {
     }).then((data: Response) => {
       if (data.ok) {
         data.json().then((deviceLink: DeviceLink) => {
-          const cloneState = structuredClone(this.getState());
-          cloneState.deviceLinkData.device = deviceLink;
-          cloneState.deviceLinkData.type = "token_device";
-          this.saveState(cloneState);
+          this.saveState((prevState: MainStore) => {
+            prevState.deviceLinkData.device = deviceLink;
+            return prevState;
+          });
+          this.dispatchEvent(new Event("token_token_device"));
         });
       } else {
         data.json().then((e) => console.log(e));

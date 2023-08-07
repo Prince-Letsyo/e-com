@@ -10,7 +10,6 @@ export default class SiteView extends View {
       this.$.siteForm = this.qs("#create_site");
       this.createSite();
     } catch (error) {
-      console.log({error});
     }
     this.$.websiteDiv = this.qs("#website_div");
     this.update_url = `/auth/update_domain/`;

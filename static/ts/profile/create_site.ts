@@ -4,18 +4,18 @@ import SiteView from "./create_site_view.js";
 export default function initSiteApp() {
   const site_view = new SiteView();
   const site_store = new SiteStore();
-  site_store.addEventListener("statechange", (event: Event) => {
-    const {type, site} = site_store.store.siteData
-    if (type === "create_update") {
-      site_view.reCreateSite(site);
-      site_view.createSite();
-      createSite(site_view, site_store, site_view.update_url);
-    } else {
-      site_view.displaySite(site);
-      eidiSite(site_view, site_store);
-    }
-  });
 
+  site_store.addEventListener("site_create_update", (_event: Event) => {
+    site_view.reCreateSite(site_store.store.siteData.site)
+    site_view.createSite();
+    createSite(site_view, site_store, site_view.update_url);
+  })
+  
+  site_store.addEventListener("site_display", (_event: Event) => {
+    site_view.displaySite(site_store.store.siteData.site);
+    eidiSite(site_view, site_store);
+  })
+  
   createSite(site_view, site_store, site_view.create_url);
   eidiSite(site_view, site_store);
 }

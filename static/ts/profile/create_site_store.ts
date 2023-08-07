@@ -1,5 +1,5 @@
 import Store from "../store.js";
-import { DataSite } from "../types.js";
+import { DataSite, MainStore } from "../types.js";
 import { headers } from "../utils.js";
 
 export default class SiteStore extends Store {
@@ -17,25 +17,30 @@ export default class SiteStore extends Store {
       }).then((data: Response) => {
         if (data.ok)
           data.json().then((dataSite: DataSite) => {
-            this.stateHandler(dataSite, "display");
+            this.stateHandler(dataSite);
+            this.dispatchEvent(new Event("site_display"));
           });
         else data.json().then((e) => console.log(e));
       });
-    else this.stateHandler({ domain, name }, "display");
+    else {
+      this.stateHandler({ domain, name });
+      this.dispatchEvent(new Event("site_display"));
+    }
   }
 
-  private stateHandler(dataSite: DataSite, type: string) {
-    const cloneState = structuredClone(this.getState());
-    cloneState.siteData.site = dataSite;
-    cloneState.siteData.type = type;
-    this.saveState(cloneState);
+  private stateHandler(dataSite: DataSite) {
+    this.saveState((prevState: MainStore) => {
+      prevState.siteData.site = dataSite;
+      return prevState;
+    });
   }
 
   fetchSiteData() {
     fetch(`/auth/site/`).then((data: Response) => {
       if (data.ok)
         data.json().then((dataSite: DataSite) => {
-          this.stateHandler(dataSite, "create_update");
+          this.stateHandler(dataSite);
+          this.dispatchEvent(new Event("site_create_update"));
         });
       else data.json().then((e) => console.log(e));
     });

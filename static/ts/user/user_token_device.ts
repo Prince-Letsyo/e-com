@@ -6,25 +6,29 @@ export default function initTokenApp() {
   const token_device_view = new TokenDeviceView();
   const token_device_store = new TokenDeviceStore();
 
-  token_device_store.addEventListener("statechange", (event: Event) => {
-    const { type, device, dataBackup } =
-      token_device_store.store.deviceLinkData;
-    if (type === "token_device") {
-      token_device_view.showQrcode(device);
-      processTokenCode(
-        token_device_view,
-        token_device_store,
-        device.otp_device
-      );
-    } else if (type === "process_token_code") {
+  token_device_store.addEventListener("token_token_device", (_event: Event) => {
+    const { device } = token_device_store.store.deviceLinkData;
+    token_device_view.showQrcode(device);
+    processTokenCode(token_device_view, token_device_store, device.otp_device);
+  });
+
+  token_device_store.addEventListener(
+    "token_process_token_code",
+    (_event: Event) => {
       token_device_view.createBackUp();
       cancelTokenBackUp(token_device_view);
       generateTokenBackUp(token_device_view, token_device_store);
-    } else if (type === "generate_backup_code") {
+    }
+  );
+
+  token_device_store.addEventListener(
+    "token_generate_backup_code",
+    (_event: Event) => {
+      const { dataBackup } = token_device_store.store.deviceLinkData;
       token_device_view.generatedBackUp(dataBackup);
       doneTokenBackUp(token_device_view);
     }
-  });
+  );
 
   createTokenDevice(token_device_view, token_device_store);
 }
