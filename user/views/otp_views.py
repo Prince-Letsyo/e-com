@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import (
 from django.views.generic import FormView
 from django.urls import reverse, reverse_lazy
 from django_otp.forms import OTPTokenForm
+from user.forms.otp_forms import CustomOTPTokenForm
 
 
 class HasVerifiedOTP(UserPassesTestMixin):
@@ -29,7 +30,7 @@ class HasVerifiedOTP(UserPassesTestMixin):
 
 class OTPCheckPointView(LoginRequiredMixin, HasVerifiedOTP, FormView):
     template_name = "user/otp_check_point.html"
-    form_class = OTPTokenForm
+    form_class = CustomOTPTokenForm
     if_configured = True
 
     def get_form_kwargs(self):

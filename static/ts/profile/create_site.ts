@@ -5,6 +5,7 @@ export default function initSiteApp() {
   const site_view = new SiteView();
   const site_store = new SiteStore();
 
+  //store events 
   site_store.addEventListener("site_create_update", (_event: Event) => {
     site_view.reCreateSite(site_store.store.siteData.site)
     site_view.createSite();
@@ -15,6 +16,10 @@ export default function initSiteApp() {
     site_view.displaySite(site_store.store.siteData.site);
     eidiSite(site_view, site_store);
   })
+
+  site_store.addEventListener("site_display_error", (_event: Event) => {
+    // TODO
+  })
   
   createSite(site_view, site_store, site_view.create_url);
   eidiSite(site_view, site_store);
@@ -22,6 +27,7 @@ export default function initSiteApp() {
 
 window.addEventListener("load", initSiteApp);
 
+//view events 
 const eidiSite = (view: SiteView, store: SiteStore) => {
   view.editSubmitedSite("click", (event: Event) => {
     event.preventDefault();

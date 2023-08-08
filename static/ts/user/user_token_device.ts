@@ -6,11 +6,20 @@ export default function initTokenApp() {
   const token_device_view = new TokenDeviceView();
   const token_device_store = new TokenDeviceStore();
 
+  //store events
   token_device_store.addEventListener("token_token_device", (_event: Event) => {
     const { device } = token_device_store.store.deviceLinkData;
     token_device_view.showQrcode(device);
     processTokenCode(token_device_view, token_device_store, device.otp_device);
   });
+  token_device_store.addEventListener(
+    "token_token_device_error",
+    (_event: Event) => {
+      const { errors } = token_device_store.store.deviceLinkData;
+      if (errors.exist) {
+      }
+    }
+  );
 
   token_device_store.addEventListener(
     "token_process_token_code",
@@ -35,6 +44,7 @@ export default function initTokenApp() {
 
 window.addEventListener("load", initTokenApp);
 
+//view events
 const createTokenDevice = (view: TokenDeviceView, store: TokenDeviceStore) => {
   view.createTokenDevice("click", (event: Event) => {
     event.preventDefault();

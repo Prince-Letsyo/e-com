@@ -1,3 +1,4 @@
+import json
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.db import transaction
@@ -25,7 +26,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, CreateAPIView
 from rest_framework_simplejwt.views import TokenVerifyView
 from helper import CustomRedirect
 from helper.decorators import check_domain
@@ -34,7 +35,9 @@ from user.serializers import (
     LogInResponseWithExpirationSerializer,
     LogInResponseWithoutExpirationSerializer,
     PasswordTokenSerializer,
+    OTOPDeviceSerializer,
 )
+from user.views.json_web_views import create_user_token_device
 from user.models import User, SiteOwnerProfile
 
 site_keys = [
@@ -390,7 +393,7 @@ class ConfirmEmailAPIView(GenericAPIView):
 
 verify_email_resend = openapi.Schema(
     type=openapi.TYPE_OBJECT,
-    title=" CustomResendEmailVerificationView",
+    title="CustomResendEmailVerificationView",
     properties={
         "detail": openapi.Schema(type=openapi.TYPE_STRING, default="Ok"),
     },
@@ -457,3 +460,27 @@ class CustomRefreshToken(get_refresh_view()):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+
+
+class OTOPDeviceCreateAPIView(CreateAPIView):
+    serializer_class = OTOPDeviceSerializer
+
+    @check_domain(site_owner_model=SiteOwnerProfile)
+    @swagger_auto_schema(
+        responses={401: non_exist_domain, 403: api_keys},
+        manual_parameters=site_keys,
+    )
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        path = reverse(viewname="user:token_setup", current_app="user")
+        request.path = path
+        request.body = json.dumps(serializer.data).encode()
+        request.method = "POST"
+
+        kwargs["external"] = True
+        json_data = create_user_token_device(request, *args, **kwargs)
+        return Response(
+            data=json.loads(json_data.content), status=json_data.status_code
+        )

@@ -71,3 +71,10 @@ class CustomPasswordResetSerializer(PasswordResetSerializer):
             return CustomAllAuthPasswordResetForm
         else:
             return PasswordResetForm
+
+
+class OTOPDeviceSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    type_of_key = serializers.ChoiceField(
+        choices=[("time_based", "Time based"), ("counter_based", "Counter based")]
+    )

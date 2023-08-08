@@ -6,6 +6,10 @@ let initialStore: MainStore = {
       domain: "",
       name: "",
     },
+    errors: {
+      name: [],
+      domain: []
+    }
   },
   deviceLinkData: {
     device: {
@@ -15,19 +19,16 @@ let initialStore: MainStore = {
     dataBackup: {
       codes: [],
     },
+    errors: {
+      has_other_device: false,
+      exist: false
+    },
   },
 };
 
 export default class Store extends EventTarget {
   constructor() {
     super();
-    // setTimeout(() => {
-    //   console.log("Up");
-    // }, 1000);
-
-    // setInterval(() => {
-    //   console.log("Down");
-    // }, 1000);
   }
 
   get store(): MainStore {
@@ -52,5 +53,9 @@ export default class Store extends EventTarget {
         throw new Error("Invalid arguement passed to saveState");
     }
     initialStore = newState;
+    console.log(initialStore);
+  }
+  protected dispatchType(type: string): void {
+    this.dispatchEvent(new Event(type));
   }
 }

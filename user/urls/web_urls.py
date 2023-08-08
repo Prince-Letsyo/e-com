@@ -5,7 +5,8 @@ from user.views.json_web_views import (
     get_site_view,
     update_site_view,
     json_token_check_view,
-    create_backup_token_code_view,get_user_backup_codes
+    create_backup_token_code_view,
+    get_user_backup_codes,
 )
 from user.views.web_views import qrcode_view
 

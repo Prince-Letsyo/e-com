@@ -1,5 +1,5 @@
 import Store from "../store.js";
-import { DataSite, MainStore } from "../types.js";
+import { DataSite, DataSiteError, MainStore } from "../types.js";
 import { headers } from "../utils.js";
 
 export default class SiteStore extends Store {
@@ -9,7 +9,7 @@ export default class SiteStore extends Store {
 
   createOrUpdateSiteData(url: string, domain: string, name: string) {
     const { siteData } = this.getState();
-    if (siteData.site.name !== name && siteData.site.domain !== domain)
+    if (siteData.site.name !== name || siteData.site.domain !== domain)
       fetch(url, {
         method: "POST",
         headers: headers,
@@ -18,13 +18,20 @@ export default class SiteStore extends Store {
         if (data.ok)
           data.json().then((dataSite: DataSite) => {
             this.stateHandler(dataSite);
-            this.dispatchEvent(new Event("site_display"));
+            this.dispatchType("site_display");
           });
-        else data.json().then((e) => console.log(e));
+        else
+          data.json().then((error:DataSiteError) => {
+            this.saveState((prevState: MainStore) => {
+              prevState.siteData.errors = error;
+              return prevState;
+            });
+            this.dispatchType("site_display_error");
+          });
       });
     else {
       this.stateHandler({ domain, name });
-      this.dispatchEvent(new Event("site_display"));
+      this.dispatchType("site_display");
     }
   }
 
@@ -40,7 +47,7 @@ export default class SiteStore extends Store {
       if (data.ok)
         data.json().then((dataSite: DataSite) => {
           this.stateHandler(dataSite);
-          this.dispatchEvent(new Event("site_create_update"));
+          this.dispatchType("site_create_update");
         });
       else data.json().then((e) => console.log(e));
     });

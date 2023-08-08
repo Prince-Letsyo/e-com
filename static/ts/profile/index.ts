@@ -8,12 +8,25 @@ export default function initProfileApp() {
   profile_store.addEventListener("token_user_backup_code", (_event: Event) => {
     const { dataBackup } = profile_store.store.deviceLinkData;
     if (dataBackup.codes.length <= 3)
-    generateBackCodes(profile_view, profile_store);
-})
-profile_store.addEventListener("token_generate_backup_code", (_event: Event) => {
-    const { dataBackup } = profile_store.store.deviceLinkData;
-      profile_view.generateBacUpCode(dataBackup);
+      generateBackCodes(profile_view, profile_store);
   });
+  
+  profile_store.addEventListener(
+    "token_user_backup_code_error",
+    (_event: Event) => {
+      const { errors } = profile_store.store.deviceLinkData;
+      if (errors.has_other_device)
+        generateBackCodes(profile_view, profile_store);
+    }
+  );
+
+  profile_store.addEventListener(
+    "token_generate_backup_code",
+    (_event: Event) => {
+      const { dataBackup } = profile_store.store.deviceLinkData;
+      profile_view.generateBacUpCode(dataBackup);
+    }
+  );
 
   profile_store.checkNumberOfBackUpCodes();
 }

@@ -1,5 +1,5 @@
 import Store from "../store.js";
-import { DataBackup, DataSuccess, DeviceLink, MainStore } from "../types.js";
+import { DataBackup, DataSuccess, DeviceLink, DeviceLinkError, MainStore } from "../types.js";
 import { headers } from "../utils.js";
 
 export default class TokenDeviceStore extends Store {
@@ -11,12 +11,11 @@ export default class TokenDeviceStore extends Store {
     fetch("/auth/token_setup/backup_code/").then((data: Response) => {
       if (data.ok) {
         data.json().then((dataBackUp: DataBackup) => {
-          const cloneState = structuredClone(this.getState());
-          cloneState.deviceLinkData.dataBackup = dataBackUp;
           this.saveState((prevState: MainStore) => {
-            return {...prevState, ...cloneState};
+            prevState.deviceLinkData.dataBackup = dataBackUp;
+            return prevState;
           });
-          this.dispatchEvent(new Event("token_generate_backup_code"));
+          this.dispatchType("token_generate_backup_code");
         });
       } else {
         data.json().then((e) => console.log(e));
@@ -44,14 +43,17 @@ export default class TokenDeviceStore extends Store {
             this.saveState((prevState: MainStore) => {
               return prevState;
             });
-            this.dispatchEvent(new Event("token_process_token_code"));
+            this.dispatchType("token_process_token_code");
           }
         });
       } else {
-        data.json().then((e) => console.log(e));
+        data.json().then((e) => {
+          console.log(e);
+        });
       }
     });
   }
+  
   createTokenDevice(type_of_key: string, name: string) {
     fetch("/auth/token_setup/", {
       method: "POST",
@@ -64,10 +66,17 @@ export default class TokenDeviceStore extends Store {
             prevState.deviceLinkData.device = deviceLink;
             return prevState;
           });
-          this.dispatchEvent(new Event("token_token_device"));
+          this.dispatchType("token_token_device");
         });
       } else {
-        data.json().then((e) => console.log(e));
+        data.json().then((error: DeviceLinkError) => {
+          this.saveState((prevState: MainStore) => {
+            prevState.deviceLinkData.errors = error;
+            return prevState;
+          });
+          console.log(error);
+        });
+        this.dispatchType("token_token_device_error");
       }
     });
   }

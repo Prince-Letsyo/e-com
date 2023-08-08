@@ -13,10 +13,12 @@ from user.views import (
     CustomVerifyEmailView,
     ConfirmEmailAPIView,
     CustomResendEmailVerificationView,
+    OTOPDeviceCreateAPIView,
 )
 
 auth_urlpatterns = [
     path("login/", CustomLoginView.as_view(), name="log_in"),
+    path("otp/setup/", OTOPDeviceCreateAPIView.as_view(), name="otp_device_setup"),
     path("logout/", CustomLogoutView.as_view(), name="log_out"),
     path("user/", CustomUserDetailsView.as_view(), name="user_detail"),
     re_path(
