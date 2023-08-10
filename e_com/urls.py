@@ -67,6 +67,7 @@ urlpatterns = [
     # path("admin/", admin.site.urls),
     path("otpadmin/", otp_admin_site.urls),
     path("auth/", include("user.urls")),
+    path("auth/otp/", include("trench.urls")),
     path("product/", include("product.urls")),
 ]
 if settings.DEBUG:

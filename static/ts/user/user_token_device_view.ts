@@ -53,7 +53,7 @@ export default class TokenDeviceView extends View {
   public showQrcode(deviceLink: DeviceLink): void {
     this.$.tokenDiv.innerHTML = `
     <div id="token_key_div">
-    <img id="token_key_qrcode" width="200" height="200" style="background-color: white" src="${deviceLink.link}" />  
+    <img id="token_key_qrcode" width="200" height="200" style="background-color: white" src="${deviceLink.qrcode_link}" />  
     
     <form action="" id="otp_device_form" method="POST">
     <label htmlfor="id_otp_token">Otp token:</label>
@@ -66,7 +66,7 @@ export default class TokenDeviceView extends View {
     if (this.$.otpDeviceForm) this.scanAndProvideCode(deviceLink.otp_device);
   }
 
-  private scanAndProvideCode(otp_device: string): void {
+  private scanAndProvideCode(_otp_device: string): void {
     this.$.otpToken = this.qs("#id_otp_token");
     this.$.otpDeviceFormBtn = this.qs("#otp_device_form_btn");
   }
@@ -105,7 +105,7 @@ export default class TokenDeviceView extends View {
   public generatedBackUp(dataBackUp:DataBackup):void{
     let liElems = "";
     dataBackUp.codes.forEach((element: string) => {
-      liElems += `<li>${element}</li>`;
+      liElems += `<li>${element}</li>\n`;
     });
 
     this.$.backupCodeDiv.innerHTML = `

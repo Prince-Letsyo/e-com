@@ -1,3 +1,5 @@
+from typing import List
+
 import json
 import validators
 from allauth.account.adapter import get_current_site
@@ -9,18 +11,12 @@ class OpenFile:
     data = []
 
     def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+        return cls._instance or super().__new__(cls)
 
     def __init__(self, file, filter_by, filtered):
         with open(file, "r", encoding="utf-8") as file:
             json_data = json.load(file)
-            if filter_by is not None:
-                data = filtered(json_data, filter_by)
-            else:
-                data = json_data
-        OpenFile.data = data
+        OpenFile.data = filtered(json_data, filter_by) if filter_by else json_data
 
 
 def filtered_cities(lst, country):

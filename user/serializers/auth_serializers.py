@@ -1,11 +1,18 @@
 from django.conf import settings
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.forms import PasswordResetForm
-from dj_rest_auth.serializers import LoginSerializer, PasswordResetSerializer
+from dj_rest_auth.serializers import (
+    LoginSerializer as DJLoginSerializer,
+    PasswordResetSerializer,
+)
 from dj_rest_auth.registration.serializers import (
     RegisterSerializer,
 )
 from rest_framework import serializers
+from trench.serializers import (
+    CodeLoginSerializer,
+    LoginSerializer as OTPLoginSerializer,
+)
 from helper.choices import Sex
 from user.forms.api_forms import CustomAllAuthPasswordResetForm
 from django.utils.encoding import smart_str
@@ -13,7 +20,7 @@ from allauth.account.utils import url_str_to_user_pk
 from user.models import User
 
 
-class CustomLoginSerializer(LoginSerializer):
+class CustomLoginSerializer(DJLoginSerializer):
     username = serializers.CharField(required=True, allow_blank=True)
     email = None
     pass
@@ -73,8 +80,5 @@ class CustomPasswordResetSerializer(PasswordResetSerializer):
             return PasswordResetForm
 
 
-class OTOPDeviceSerializer(serializers.Serializer):
-    name = serializers.CharField()
-    type_of_key = serializers.ChoiceField(
-        choices=[("time_based", "Time based"), ("counter_based", "Counter based")]
-    )
+class AllauthCodeLoginSerializer(CodeLoginSerializer, OTPLoginSerializer):
+    pass

@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    # third party app
+    # third party apps
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -53,11 +53,12 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "guardian",
-    "django_otp",
     "django_otp.plugins.otp_static",
     "django_otp.plugins.otp_totp",
     "django_otp.plugins.otp_hotp",
-    "django_otp.plugins.otp_email",
+    "django_otp",
+    "trench",
+    # local apps
     "user",
     "user_profile",
     "product",
@@ -137,7 +138,6 @@ USE_I18N = True
 USE_TZ = True
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",  # default
     "guardian.backends.ObjectPermissionBackend",
@@ -150,8 +150,6 @@ LOGIN_REDIRECT_URL = reverse_lazy("user_profile:profile")
 AUTH_USER_MODEL = "user.User"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.BasicAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
     ),
     "DEFAULT_RENDERER_CLASSES": [

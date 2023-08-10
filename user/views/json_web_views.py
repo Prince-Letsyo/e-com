@@ -1,20 +1,19 @@
 import json
-from allauth.utils import build_absolute_uri
 from django.http import JsonResponse
 from django.urls import reverse
 from django.contrib.auth import BACKEND_SESSION_KEY, login as auth_login
 from django.contrib.sites.models import Site
 from guardian.shortcuts import assign_perm, get_objects_for_user
-from django_otp.forms import OTPTokenForm
 from django_otp.plugins.otp_hotp.models import HOTPDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_static.lib import add_static_token
 from user.forms.otp_forms import get_user_device_list
 from user.forms import CreateSiteForm
+from user.forms.otp_forms import CustomOTPTokenForm
 
 
-def create_site_view(request, *args, **kwargs):
+def create_site_view(request):
     form = CreateSiteForm(json.loads(request.body) or None)
     if form.is_valid():
         site = form.save()
@@ -36,14 +35,14 @@ def get_site_and_res(user):
     return site, response
 
 
-def get_site_view(request, *args, **kwargs):
+def get_site_view(request):
     site, response = get_site_and_res(request.user)
     if response:
         return response
     return JsonResponse({"name": site.name, "domain": site.domain}, status=200)
 
 
-def update_site_view(request, *args, **kwargs):
+def update_site_view(request):
     site, response = get_site_and_res(request.user)
     if response:
         return response
@@ -55,8 +54,7 @@ def update_site_view(request, *args, **kwargs):
     return JsonResponse(form.errors, status=400)
 
 
-def create_device(request, device_model, user, data, key_type, *args, **kwargs):
-    external = kwargs.get("external", False)
+def create_device(device_model, user, data, key_type):
     device_list = device_model.objects.filter(user=user, **data)
     if device_list.exists():
         return JsonResponse({"exist": True}, status=400)
@@ -68,27 +66,18 @@ def create_device(request, device_model, user, data, key_type, *args, **kwargs):
                 options = op[0]
                 break
 
-        if external:
-            qrcode_link = build_absolute_uri(
-                request,
-                reverse(
-                    "user:qrcode", kwargs={"pk": device.pk, "device_type": key_type}
-                ),
-            )
-        else:
-            qrcode_link = reverse(
-                "user:qrcode", kwargs={"pk": device.pk, "device_type": key_type}
-            )
         return JsonResponse(
             {
-                "link": qrcode_link,
+                "qrcode_link": reverse(
+                    "user:qrcode", kwargs={"pk": device.pk, "device_type": key_type}
+                ),
                 "otp_device": options,
             },
             status=201,
         )
 
 
-def create_user_token_device(request, *args, **kwargs):
+def create_user_token_device(request):
     data = json.loads(request.body)
     key_type = data.pop("type_of_key")
     if key_type == "time_based":
@@ -98,8 +87,6 @@ def create_user_token_device(request, *args, **kwargs):
             user=request.user,
             data=data,
             key_type=key_type,
-            *args,
-            **kwargs,
         )
     else:
         return create_device(
@@ -108,13 +95,11 @@ def create_user_token_device(request, *args, **kwargs):
             user=request.user,
             data=data,
             key_type=key_type,
-            *args,
-            **kwargs,
         )
 
 
-def json_token_check_view(request, *args, **kwargs):
-    form = OTPTokenForm(
+def json_token_check_view(request):
+    form = CustomOTPTokenForm(
         user=request.user, request=request, data=json.loads(request.body) or None
     )
     if form.is_valid():
@@ -123,10 +108,10 @@ def json_token_check_view(request, *args, **kwargs):
             user.backend = request.session[BACKEND_SESSION_KEY]
             auth_login(request, form.get_user())
         return JsonResponse({"success": True}, status=200)
-    return JsonResponse({}, status=400)
+    return JsonResponse(form.errors, status=400)
 
 
-def create_backup_token_code_view(request, *args, **kwargs):
+def create_backup_token_code_view(request):
     static_device, created = StaticDevice.objects.get_or_create(user=request.user)
     device_count = 10
 
@@ -144,7 +129,7 @@ def create_backup_token_code_view(request, *args, **kwargs):
         return JsonResponse({"codes": static_token_list}, status=200)
 
 
-def get_user_backup_codes(request, *args, **kwargs):
+def get_user_backup_codes(request):
     static_devices = StaticDevice.objects.filter(user=request.user)
 
     if static_devices.exists():

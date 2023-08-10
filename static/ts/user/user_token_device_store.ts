@@ -1,5 +1,11 @@
 import Store from "../store.js";
-import { DataBackup, DataSuccess, DeviceLink, DeviceLinkError, MainStore } from "../types.js";
+import {
+  DataBackup,
+  DataSuccess,
+  DeviceLink,
+  DeviceLinkError,
+  MainStore,
+} from "../types.js";
 import { headers } from "../utils.js";
 
 export default class TokenDeviceStore extends Store {
@@ -53,7 +59,7 @@ export default class TokenDeviceStore extends Store {
       }
     });
   }
-  
+
   createTokenDevice(type_of_key: string, name: string) {
     fetch("/auth/token_setup/", {
       method: "POST",

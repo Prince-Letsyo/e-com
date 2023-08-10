@@ -1,4 +1,3 @@
-import json
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.db import transaction
@@ -8,7 +7,6 @@ from django.utils.encoding import smart_str
 from allauth.account.utils import url_str_to_user_pk
 from django.utils.http import urlsafe_base64_decode
 from dj_rest_auth.views import (
-    LoginView,
     LogoutView,
     PasswordResetView,
     PasswordChangeView,
@@ -26,81 +24,17 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, CreateAPIView
+from rest_framework.generics import GenericAPIView
 from rest_framework_simplejwt.views import TokenVerifyView
 from helper import CustomRedirect
 from helper.decorators import check_domain
 from helper.permissions import IsVerified
 from user.serializers import (
-    LogInResponseWithExpirationSerializer,
     LogInResponseWithoutExpirationSerializer,
     PasswordTokenSerializer,
-    OTOPDeviceSerializer,
 )
-from user.views.json_web_views import create_user_token_device
 from user.models import User, SiteOwnerProfile
-
-site_keys = [
-    openapi.Parameter(
-        name="Public-Key",
-        in_=openapi.IN_HEADER,
-        type=openapi.TYPE_STRING,
-        required=True,
-    ),
-    openapi.Parameter(
-        name="Secret-Key",
-        in_=openapi.IN_HEADER,
-        type=openapi.TYPE_STRING,
-        required=True,
-    ),
-]
-non_exist_domain = openapi.Schema(
-    type=openapi.TYPE_OBJECT,
-    title="Domain",
-    properties={
-        "domain": openapi.Schema(
-            type=openapi.TYPE_STRING, default="Your domain does not exist."
-        ),
-    },
-)
-
-api_keys = openapi.Schema(
-    type=openapi.TYPE_OBJECT,
-    title="Api-keys",
-    properties={
-        "Public-key": openapi.Schema(
-            type=openapi.TYPE_STRING, default="Public-key is required."
-        ),
-        "Secret-key": openapi.Schema(
-            type=openapi.TYPE_STRING, default="Secret-key is required."
-        ),
-    },
-)
-
-
-class CustomLoginView(LoginView):
-    """
-    Check the credentials and return the REST Token
-    if the credentials are valid and authenticated.
-    Calls Django Auth login method to register User ID
-    in Django session framework
-
-    Accept the following POST parameters: username, password
-    Return the REST Framework Token Object's key.
-    """
-
-    @check_domain(site_owner_model=SiteOwnerProfile)
-    @swagger_auto_schema(
-        responses={
-            200: LogInResponseWithExpirationSerializer
-            if api_settings.JWT_AUTH_RETURN_EXPIRATION
-            else LogInResponseWithoutExpirationSerializer
-        },
-        manual_parameters=site_keys,
-    )
-    def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
-
+from user.views.views_utils import *
 
 log_out_request = openapi.Schema(
     type=openapi.TYPE_OBJECT,
@@ -460,27 +394,3 @@ class CustomRefreshToken(get_refresh_view()):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
-
-
-class OTOPDeviceCreateAPIView(CreateAPIView):
-    serializer_class = OTOPDeviceSerializer
-
-    @check_domain(site_owner_model=SiteOwnerProfile)
-    @swagger_auto_schema(
-        responses={401: non_exist_domain, 403: api_keys},
-        manual_parameters=site_keys,
-    )
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        path = reverse(viewname="user:token_setup", current_app="user")
-        request.path = path
-        request.body = json.dumps(serializer.data).encode()
-        request.method = "POST"
-
-        kwargs["external"] = True
-        json_data = create_user_token_device(request, *args, **kwargs)
-        return Response(
-            data=json.loads(json_data.content), status=json_data.status_code
-        )

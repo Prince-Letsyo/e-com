@@ -1,6 +1,6 @@
 export type DeviceLink = {
   otp_device: string;
-  link: string;
+  qrcode_link: string;
 };
 
 export type DataSuccess = {

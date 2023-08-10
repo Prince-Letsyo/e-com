@@ -14,7 +14,7 @@ let initialStore: MainStore = {
   deviceLinkData: {
     device: {
       otp_device: "",
-      link: "",
+      qrcode_link: ""
     },
     dataBackup: {
       codes: [],

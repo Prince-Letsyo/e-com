@@ -1,7 +1,6 @@
 from django.urls import path, re_path
 from dj_rest_auth.app_settings import api_settings
 from user.views import (
-    CustomLoginView,
     CustomLogoutView,
     CustomPasswordChangeView,
     CustomPasswordResetView,
@@ -13,12 +12,13 @@ from user.views import (
     CustomVerifyEmailView,
     ConfirmEmailAPIView,
     CustomResendEmailVerificationView,
-    OTOPDeviceCreateAPIView,
+    MFAFirstStepJWTView,
+    MFASecondStepJWTView,
 )
 
 auth_urlpatterns = [
-    path("login/", CustomLoginView.as_view(), name="log_in"),
-    path("otp/setup/", OTOPDeviceCreateAPIView.as_view(), name="otp_device_setup"),
+    path("login/", MFAFirstStepJWTView.as_view(), name="log_in"),
+    path("login/code/", MFASecondStepJWTView.as_view(), name="log_in_code"),
     path("logout/", CustomLogoutView.as_view(), name="log_out"),
     path("user/", CustomUserDetailsView.as_view(), name="user_detail"),
     re_path(
@@ -58,7 +58,7 @@ auth_urlpatterns = [
 
 if api_settings.USE_JWT:
     from user.views import CustomTokenVerifyView
-    from user.views.api_auth_views import CustomRefreshToken
+    from user.views.api_auth.api_auth_views import CustomRefreshToken
 
     auth_urlpatterns += [
         path("token/verify/", CustomTokenVerifyView.as_view(), name="token_verify"),

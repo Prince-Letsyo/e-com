@@ -1,7 +1,5 @@
 from functools import wraps
 from helper.utils import *
-from django.urls import reverse
-from dj_rest_auth.forms import build_absolute_uri
 from rest_framework.response import Response
 from rest_framework import status
 
